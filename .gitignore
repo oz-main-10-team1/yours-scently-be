@@ -1,0 +1,14 @@
+.python-version
+*.env
+.env
+envs/
+.DS_Store
+__pycache__/
+.idea/
+.dmypy.json
+htmlcov/
+.venv/
+venv/
+apps/static
+apps/media
+staticfiles
