@@ -16,10 +16,25 @@ dependencies = [
     "black (>=25.1.0,<26.0.0)",
     "isort (>=6.0.1,<7.0.0)",
     "mypy (>=1.17.0,<2.0.0)",
-    "python-dotenv (>=1.1.1,<2.0.0)"
+    "python-dotenv (>=1.1.1,<2.0.0)",
+    "django-stubs (>=5.2.2,<6.0.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile="black"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+python_version = 3.13
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.local"
