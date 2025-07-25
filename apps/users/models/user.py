@@ -9,12 +9,11 @@ from apps.users.manager.user_manager import CustomUserManager
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=130)
     name = models.CharField(max_length=30)
     nickname = models.CharField(max_length=10, unique=True)
     birth_date = models.DateField(default=date(2000, 1, 1))
     phone_number = models.CharField(max_length=20, unique=True)
-    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
