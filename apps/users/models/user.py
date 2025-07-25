@@ -1,19 +1,23 @@
 from datetime import date
 
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 
 from apps.users.manager.user_manager import CustomUserManager
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser):
+    class Role(models.TextChoices):
+        ADMIN = "ADMIN", "관리자"
+        GENERAL = "GENERAL", "일반회원"
+
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=30)
     nickname = models.CharField(max_length=10, unique=True)
     birth_date = models.DateField(default=date(2000, 1, 1))
     phone_number = models.CharField(max_length=20, unique=True)
-    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    role = models.CharField(max_length=10, choices=Role.choices, default=Role.GENERAL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
