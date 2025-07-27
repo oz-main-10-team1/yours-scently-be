@@ -22,8 +22,12 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+# from django.contrib import admin
+from django.urls import URLPattern, URLResolver, include, path
 
-urlpatterns: list[URLPattern | URLResolver] = []
+urlpatterns: list[URLPattern | URLResolver] = [
+    path("api/v1/auth/", include("apps.users.urls")),
+]
 
 if settings.DEBUG:
     urlpatterns += [
