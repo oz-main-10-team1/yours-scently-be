@@ -50,4 +50,5 @@ django_settings_module = "config.settings.local"
 
 [tool.poetry.group.dev.dependencies]
 pytest-django = "^4.11.1"
+coverage = "^7.10.1"
 
