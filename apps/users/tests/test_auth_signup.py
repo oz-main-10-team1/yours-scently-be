@@ -85,8 +85,6 @@ def test_signup_after_email_and_phone_verification():
 
     response = client.post(reverse("signup"), data=payload)
 
-    print(response.status_code)
-    print(response.json())
 
     assert response.status_code == 201
     assert response.json()["message"] == "회원가입이 완료되었습니다."
