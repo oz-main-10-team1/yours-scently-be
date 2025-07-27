@@ -16,14 +16,18 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.urls import URLPattern, URLResolver, path
+
+# from django.contrib import admin
+from django.urls import URLPattern, URLResolver, include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
 
-urlpatterns: list[URLPattern | URLResolver] = []
+urlpatterns: list[URLPattern | URLResolver] = [
+    path("api/v1/auth/", include("apps.users.urls")),
+]
 
 if settings.DEBUG:
     urlpatterns += [
