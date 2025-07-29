@@ -16,28 +16,23 @@ Including another URLconf
 """
 
 from django.conf import settings
+from django.contrib import admin
 
 # from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
+from django.urls.resolvers import URLPattern, URLResolver
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from django.contrib import admin
-from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
-from django.urls.resolvers import URLPattern, URLResolver
 
 urlpatterns: list[URLPattern | URLResolver] = [
     # path("admin/", admin.site.urls),
-
     # 앱 API 경로
     path("api/v1/", include("apps.products.urls")),  # <--- 앱 연결
     path("api/v1/auth/", include("apps.users.urls")),
-
     # JWT 토큰 발급/갱신
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

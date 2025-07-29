@@ -1,3 +1,5 @@
 from .product import Product
 
-__all__ = ["product",]
+__all__ = [
+    "product",
+]
