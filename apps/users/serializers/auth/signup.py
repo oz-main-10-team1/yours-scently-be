@@ -80,28 +80,14 @@ class SignUpSerializer(serializers.ModelSerializer[Any]):
         return attrs
 
     def create(self, validated_data):
-
-        email = validated_data["email"]
-        phone = validated_data["phone_number"]
-        errors = {}
-        if not is_signup_email_verified(email):
-            errors["email"] = ["이메일 인증이 완료되지 않았습니다."]
-
-        normalized_phone = normalize_phone_number(phone)
-        if not is_phone_verified(normalized_phone):
-            errors["phone_number"] = ["휴대폰 인증이 완료되지 않았습니다."]
-        if errors:
-            raise serializers.ValidationError(errors)
-
-        validated_data["phone_number"] = normalize_phone_number(validated_data["phone_number"])
         user = User(
-            email=email,
+            email=validated_data["email"],
             name=validated_data["name"],
             nickname=validated_data["nickname"],
             gender=validated_data["gender"],
             birth_date=validated_data["birth_date"],
             phone_number=validated_data["phone_number"],
-            is_active=True,  # ✅ 여기서 인증 완료되었을 때만 True로
+            is_active=True,
         )
 
         user.set_password(validated_data["password"])

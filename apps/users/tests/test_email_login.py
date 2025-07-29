@@ -16,6 +16,7 @@ def test_user() -> User:
         nickname="테스터",
         name="홍길동",
         phone_number="01012345678",
+        is_active=True,
     )
 
 

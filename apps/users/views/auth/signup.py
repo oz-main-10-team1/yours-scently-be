@@ -11,7 +11,6 @@ from apps.users.serializers.auth.signup import (
     SignUpSerializer,
 )
 from apps.users.utils.nickname_validators import is_nickname_duplicated
-from apps.users.utils.redis_utils import is_signup_email_verified
 
 
 class SignUpAPIView(APIView):
