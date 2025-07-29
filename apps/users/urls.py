@@ -4,6 +4,7 @@ from apps.users.views.auth.email_auth import (
     SendEmailCodeView,
     VerifyEmailCodeView,
 )
+from apps.users.views.auth.email_login import EmailLoginView
 from apps.users.views.auth.phone_auth import (
     SendPhoneCodeAPIView,
     VerifyPhoneCodeAPIView,
@@ -23,4 +24,5 @@ urlpatterns = [
     # 휴대폰인증
     path("signup/phone/send-code/", SendPhoneCodeAPIView.as_view(), name="phone-send-code"),
     path("signup/phone/verify/", VerifyPhoneCodeAPIView.as_view(), name="phone-verify"),
+    path("login/email/", EmailLoginView.as_view(), name="email-login"),
 ]
