@@ -148,8 +148,7 @@ jobs:
           poetry run python manage.py migrate
 
       # run test
-      - name: Test python project
+      - name: Run tests with pytest
         if: steps.check-tests.outputs.has_tests == 'true'
         run: |
-          poetry run coverage run manage.py test
-          poetry run coverage report -m
+          poetry run pytest
