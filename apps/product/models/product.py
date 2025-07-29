@@ -14,7 +14,7 @@ class Product(models.Model):
     category = models.CharField(choices=Category.choices, max_length=10)
     price = models.DecimalField(decimal_places=2, max_digits=10)
     stock = models.PositiveIntegerField()
-    product_img_url = models.CharField(max_length=255)
+    product_img_url = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
