@@ -8,13 +8,13 @@ from apps.users.models.note import Note
 class FragrancePreference(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fragrance_preference")
     preferred_top_notes = models.ManyToManyField(
-        Note, related_name="preferred_as_top_notes", limit_choices_to={"type": "top"}
+        Note, related_name="preferred_top_notes", limit_choices_to={"type": "top"}
     )
     preferred_middle_notes = models.ManyToManyField(
-        Note, related_name="preferred_as_middle_notes", limit_choices_to={"type": "middle"}
+        Note, related_name="preferred_middle_notes", limit_choices_to={"type": "middle"}
     )
     preferred_base_notes = models.ManyToManyField(
-        Note, related_name="preferred_as_base_notes", limit_choices_to={"type": "base"}
+        Note, related_name="preferred_base_notes", limit_choices_to={"type": "base"}
     )
     preferred_accords = models.ManyToManyField(Accord, related_name="preferred_accords")
 

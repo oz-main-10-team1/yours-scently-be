@@ -1,6 +1,6 @@
 from .accord import Accord
 from .fragrance_profile import Perfume
-from .fragrancepreference import FragrancePreference
+from .fragrance_preference import FragrancePreference
 from .note import Note
 from .social_user import SocialUser
 from .user import User
