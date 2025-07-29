@@ -54,7 +54,7 @@ MIDDLEWARE = [
 
 THIRD_PARTY_APPS = ["rest_framework", "drf_spectacular"]
 
-CUSTOM_APPS: list[str] = ["apps.users"]
+CUSTOM_APPS: list[str] = ["apps.users", "apps.product"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 
