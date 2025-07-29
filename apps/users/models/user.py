@@ -21,7 +21,7 @@ class User(AbstractBaseUser):
     gender = models.CharField(max_length=6, choices=Gender.choices, default=Gender.MALE)
     birth_date = models.DateField(default=date(2000, 1, 1))
     phone_number = models.CharField(max_length=20, unique=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.GENERAL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
