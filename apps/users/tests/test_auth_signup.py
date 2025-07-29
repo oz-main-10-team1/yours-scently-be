@@ -77,7 +77,7 @@ def test_signup_after_email_and_phone_verification():
         "password": "securePassword123!",
         "password_confirm": "securePassword123!",
         "name": "홍길동",
-        "nickname": "testuser12",
+        "nickname": "testuser44",
         "gender": "MALE",
         "phone_number": phone,
         "birth_date": "2000-09-09",
