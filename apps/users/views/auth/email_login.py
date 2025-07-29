@@ -27,33 +27,21 @@ class EmailLoginView(APIView):
         description="이메일과 비밀번호를 이용해 로그인하고 JWT 토큰을 발급받습니다.",
     )
     def post(self, request: Request) -> Response:
-        try:
-            serializer = EmailLoginSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+        serializer = EmailLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-            user: User = serializer.validated_data["user"]
-            tokens = generate_jwt_tokens_for_user(user)
+        user: User = serializer.validated_data["user"]
+        tokens = generate_jwt_tokens_for_user(user)
 
-            return Response(
-                {
-                    "access_token": tokens["access_token"],
-                    "refresh_token": tokens["refresh_token"],
-                    "user": {
-                        "id": user.id,  # type: ignore[attr-defined]
-                        "email": user.email,
-                        "nickname": user.nickname,
-                    },
+        return Response(
+            {
+                "access_token": tokens["access_token"],
+                "refresh_token": tokens["refresh_token"],
+                "user": {
+                    "id": user.id,  # type: ignore[attr-defined]
+                    "email": user.email,
+                    "nickname": user.nickname,
                 },
-                status=status.HTTP_200_OK,
-            )
-
-        except ValidationError as ve:
-            # 시리얼라이저의 유효성 검사 실패는 400으로 응답
-            return Response(ve.detail, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            # 예기치 못한 오류 처리
-            return Response(
-                {"detail": "서버 내부 오류가 발생했습니다."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            },
+            status=status.HTTP_200_OK,
+        )

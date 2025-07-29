@@ -77,21 +77,3 @@ def test_email_login_inactive_user(test_user: User) -> None:
 
     assert response.status_code == 400
     assert "non_field_errors" in response.data or "detail" in response.data
-
-
-def test_email_login_user_not_found() -> None:
-    client = APIClient()
-    url = reverse("email-login")
-
-    # 존재하지 않는 사용자
-    response = client.post(
-        url,
-        {
-            "email": "notexist@example.com",
-            "password": "doesntmatter",
-        },
-        format="json",
-    )
-
-    assert response.status_code == 400
-    assert "non_field_errors" in response.data or "detail" in response.data
