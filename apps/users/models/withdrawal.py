@@ -1,11 +1,12 @@
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.db import models
 
-from apps.users.models.user import User
 
 def default_due_date():
     return date.today() + timedelta(days=14)
+
 
 class Withdrawal(models.Model):
     class Reason(models.TextChoices):
@@ -14,7 +15,7 @@ class Withdrawal(models.Model):
         ETC = "ETC", "기타"
 
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="withdrawal",
     )
