@@ -1,29 +1,15 @@
 from django.conf import settings
 from django.db import models
 
-
-class Perfume(models.Model):
-    name = models.CharField(max_length=100)
+from apps.product.models import Product
 
 
 class Review(models.Model):
-    # 리뷰 작성자
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
-
-    # 어떤 향수에 대한 리뷰?
-    perfume = models.ForeignKey("product.Product", on_delete=models.CASCADE, related_name="reviews")
-
-    # 리뷰 내용
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
     content = models.TextField()
-
-    # 생성 일시 / 수정 일시
+    rating = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["user", "perfume"], name="unique_user_perfume_review"),
-        ]
 
     def __str__(self):
-        return f"{self.user} - {self.perfume.name} 리뷰"
+        return f"{self.user} - {self.product.name} 리뷰"
