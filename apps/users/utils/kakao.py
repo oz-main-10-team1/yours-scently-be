@@ -65,7 +65,7 @@ def format_full_birthday(year: Optional[str], mmdd: Optional[str]) -> Optional[s
 
 
 def generate_unique_nickname(base: str) -> str:
-    base = base[:10]  # 너무 길면 자름
+    base = base[:4]  # 너무 길면 자름
     while True:
         suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
         nickname = f"{base}_{suffix}"

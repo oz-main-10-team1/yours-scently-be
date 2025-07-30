@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -80,24 +81,27 @@ class KakaoLoginAPIView(APIView):
         if missing_fields:
             return Response(
                 {"detail": "잠시 후 다시 시도해주세요."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 기존 소셜 유저 확인 또는 신규 생성
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            user = User.objects.create(
-                email=email,
-                name=name,
-                nickname=nickname,
-                phone_number=phone_number,
-                birth_date=birthday,
-                gender=gender,
-                is_active=True,
-            )
-
-        SocialUser.objects.get_or_create(user=user, provider="KAKAO", provider_id=kakao_id)
+        with transaction.atomic():
+            try:
+                social_user = SocialUser.objects.select_related("user").get(provider="KAKAO", provider_id=kakao_id)
+                user = social_user.user
+            except SocialUser.DoesNotExist:
+                user, _ = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        "name": name,
+                        "nickname": nickname,
+                        "phone_number": phone_number,
+                        "birth_date": birthday,
+                        "gender": gender,
+                        "is_active": True,
+                    },
+                )
+                SocialUser.objects.create(user=user, provider="KAKAO", provider_id=kakao_id)
 
         # JWT 발급
         tokens = generate_jwt_tokens_for_user(user)
