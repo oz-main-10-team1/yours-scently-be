@@ -1,10 +1,10 @@
 from django.db import models
 
-from apps.users.models.user import User
+from django.conf import settings
 
 
 class SearchLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     keyword = models.CharField(max_length=100)
     result_count = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
