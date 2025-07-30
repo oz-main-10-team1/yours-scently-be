@@ -1,7 +1,8 @@
-import pytest
 from datetime import timedelta
-from django.utils import timezone
+
+import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.users.models import User, Withdrawal
@@ -11,10 +12,7 @@ from apps.users.tasks import delete_expired_withdrawn_users
 @pytest.fixture
 def active_user(db, django_user_model):
     return django_user_model.objects.create_user(
-        email="test@example.com",
-        password="testpass123",
-        nickname="테스트유저",
-        is_active=True
+        email="test@example.com", password="testpass123", nickname="테스트유저", is_active=True
     )
 
 
@@ -22,10 +20,7 @@ def active_user(db, django_user_model):
 def auth_client(active_user):
     client = APIClient()
     login_url = reverse("email-login")  # your login URL name
-    response = client.post(login_url, {
-        "email": active_user.email,
-        "password": "testpass123"
-    })
+    response = client.post(login_url, {"email": active_user.email, "password": "testpass123"})
     assert response.status_code == 200, response.data
     token = response.data.get("access_token")
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -35,10 +30,7 @@ def auth_client(active_user):
 @pytest.mark.django_db
 def test_withdrawal_success(auth_client, active_user):
     url = reverse("user-withdrawal")  # your withdrawal URL name
-    data = {
-        "reason": "서비스 불만",
-        "detail": "추천이 이상해요"
-    }
+    data = {"reason": "NOT_SATISFIED", "detail": "추천이 이상해요"}
 
     response = auth_client.post(url, data)
 
@@ -56,21 +48,18 @@ def test_withdrawal_success(auth_client, active_user):
 def test_duplicate_withdrawal(auth_client, active_user):
     Withdrawal.objects.create(
         user=active_user,
-        reason="이미 있음",
+        reason="ETC",
         reason_detail="중복 테스트",
-        due_date=timezone.now().date() + timedelta(days=14)
+        due_date=timezone.now().date() + timedelta(days=14),
     )
 
     url = reverse("user-withdrawal")
-    data = {
-        "reason": "또 요청",
-        "detail": "중복 요청"
-    }
+    data = {"reason": "ETC", "detail": "중복 요청"}
 
     response = auth_client.post(url, data)
 
     assert response.status_code == 400
-    assert "이미 탈퇴 요청된 사용자입니다." in str(response.data)
+    assert response.data["detail"] == "이미 탈퇴 요청된 사용자입니다."
 
 
 @pytest.mark.django_db
@@ -79,13 +68,10 @@ def test_login_after_withdrawal(client, active_user):
     active_user.save()
 
     login_url = reverse("email-login")
-    response = client.post(login_url, {
-        "email": active_user.email,
-        "password": "testpass123"
-    })
+    response = client.post(login_url, {"email": active_user.email, "password": "testpass123"})
 
     assert response.status_code == 400
-    assert "이메일 또는 비밀번호가 올바르지 않습니다." in str(response.data)
+    assert response.data["non_field_errors"][0] == "이메일 또는 비밀번호가 올바르지 않습니다."
 
 
 @pytest.mark.django_db
@@ -99,7 +85,7 @@ def test_celery_task_deletes_expired_user():
 
     Withdrawal.objects.create(
         user=user,
-        reason="유예 만료 테스트",
+        reason="ETC",
         reason_detail="14일 지남",
         due_date=timezone.now().date() - timedelta(days=1),
     )

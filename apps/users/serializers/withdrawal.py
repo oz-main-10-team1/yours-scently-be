@@ -2,10 +2,12 @@ from typing import Any
 
 from rest_framework import serializers
 
+from apps.users.models import Withdrawal
+
 
 class UserDeleteSerializer(serializers.Serializer[Any]):
-    reason = serializers.CharField(max_length=255)
-    detail = serializers.CharField()
+    reason = serializers.ChoiceField(choices=Withdrawal.Reason.choices)
+    detail = serializers.CharField(required=False, allow_blank=True)
 
 
 class UserDeleteResponseSerializer(serializers.Serializer):
