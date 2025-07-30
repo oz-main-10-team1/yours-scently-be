@@ -1,6 +1,5 @@
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -8,7 +7,7 @@ from rest_framework.views import APIView
 
 from apps.users.models import User
 from apps.users.serializers.auth.email_login import EmailLoginSerializer
-from core.utils.jwt import generate_jwt_tokens_for_user
+from apps.users.utils.jwt import generate_jwt_tokens_for_user
 
 
 # 이메일 로그인 API
