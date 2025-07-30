@@ -24,8 +24,6 @@ SECRET_KEY: Optional[str] = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("DJANGO_SECRET_KEY environment variable not set")
 
-AUTH_USER_MODEL = "users.User"
-
 # Application definition
 
 DJANGO_APPS = [
