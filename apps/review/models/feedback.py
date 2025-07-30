@@ -13,9 +13,11 @@ class Feedback(models.Model):
     is_helpful = models.BooleanField()
     # 생성 일시
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["user", "review"], name="unique_user_review_feedback"),
         ]
+
     def __str__(self):
         return f"Feedback by {self.user} on review {self.review.id} - Helpful: {self.is_helpful}"
