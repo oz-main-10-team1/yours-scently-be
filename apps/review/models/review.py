@@ -11,7 +11,7 @@ class Review(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
 
     # 어떤 향수에 대한 리뷰?
-    perfume = models.ForeignKey(Perfume, on_delete=models.CASCADE, related_name="reviews")
+    perfume = models.ForeignKey("product.Product", on_delete=models.CASCADE, related_name="reviews")
 
     # 리뷰 내용
     content = models.TextField()
@@ -19,6 +19,11 @@ class Review(models.Model):
     # 생성 일시 / 수정 일시
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "perfume"], name="unique_user_perfume_review"),
+        ]
 
     def __str__(self):
         return f"{self.user} - {self.perfume.name} 리뷰"
