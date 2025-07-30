@@ -14,6 +14,7 @@ from apps.users.views.auth.signup import (
     SignUpAPIView,
     SignupNicknameCheckAPIView,
 )
+from apps.users.views.withdrawal import WithdrawalAPIView
 
 urlpatterns = [
     # 회원가입
@@ -27,5 +28,7 @@ urlpatterns = [
     path("signup/phone/verify/", VerifyPhoneCodeAPIView.as_view(), name="phone-verify"),
     # 로그인
     path("login/email/", EmailLoginView.as_view(), name="email-login"),
-    path("kakao/login/", KakaoLoginAPIView.as_view(), name="kakao-login"),
+    path("login/kakao/", KakaoLoginAPIView.as_view(), name="kakao-login"),
+    # 회원 탈퇴
+    path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
 ]
