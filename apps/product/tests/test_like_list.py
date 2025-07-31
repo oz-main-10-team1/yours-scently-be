@@ -66,16 +66,9 @@ def test_product_like_list(auth_client, liked_products):
         assert "product_id" in item
 
 
-import pytest
-from django.urls import reverse
-from rest_framework.test import APIClient
-
-from apps.users.models import User
-
-
 @pytest.mark.django_db
 def test_product_like_list_empty(auth_client):
-    url = reverse("product-like-list")  # 예: path("likes/", ProductLikeListView.as_view(), name="product-like-list")
+    url = reverse("product-like-list")
     response = auth_client.get(url)
 
     assert response.status_code == 200
