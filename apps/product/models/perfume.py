@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.users.models import Accord, Note
+from apps.product.models import Accord, Note
 
 
 class Perfume(models.Model):
