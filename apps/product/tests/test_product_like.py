@@ -62,6 +62,7 @@ def test_product_like_delete_success(auth_client, product, user):
     like = Like.objects.get(user=user, product=product)
     assert like.is_liked is False
 
+
 @pytest.mark.django_db
 def test_product_like_delete_fail_no_like_record(auth_client, product):
     url = reverse("product-like", kwargs={"product_id": product.id})

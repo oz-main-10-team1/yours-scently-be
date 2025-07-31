@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.product.models import Product, Like
+from apps.product.models import Like, Product
 from apps.product.serializers.like_serializer import ProductLikeResponseSerializer
 
 
@@ -32,7 +32,11 @@ class ProductLikeAPIView(APIView):
 
     @extend_schema(
         summary="상품 좋아요 취소",
-        responses={200: ProductLikeResponseSerializer, 400: OpenApiResponse(description="찜한 내역이 없습니다."), 404: OpenApiResponse(description="존재하지 않는 상품")},
+        responses={
+            200: ProductLikeResponseSerializer,
+            400: OpenApiResponse(description="찜한 내역이 없습니다."),
+            404: OpenApiResponse(description="존재하지 않는 상품"),
+        },
         tags=["Product"],
     )
     # 좋아요 삭제
