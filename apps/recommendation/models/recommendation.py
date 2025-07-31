@@ -9,11 +9,7 @@ class Recommendation(models.Model):
         AI = "ai", "AI 기반"
         SURVEY = "survey", "설문 기반"
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="recommendations"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recommendations")
     type = models.CharField(
         max_length=10,
         choices=Type.choices,
