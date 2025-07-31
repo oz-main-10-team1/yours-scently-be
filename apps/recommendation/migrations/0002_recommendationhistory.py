@@ -7,8 +7,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0003_merge_20250730_1725"),
         ("recommendation", "0001_initial"),
+        ("product", "0002_initial"),
     ]
 
     operations = [
