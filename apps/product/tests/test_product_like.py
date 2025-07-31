@@ -37,8 +37,8 @@ def auth_client(user):
 
 
 @pytest.mark.django_db
-def test_like_create_success(auth_client, product):
-    url = reverse("product-like", kwargs={"product_id": product.id})
+def test_product_like_post_success(auth_client, product):
+    url = reverse("product-like", kwargs={"product_id": product.id})  # URL name 확인 필요
     response = auth_client.post(url)
 
     assert response.status_code == 200
@@ -49,23 +49,12 @@ def test_like_create_success(auth_client, product):
 
 
 @pytest.mark.django_db
-def test_like_create_already_liked(auth_client, product, user):
+def test_product_like_delete_success(auth_client, product, user):
+    # 미리 찜해놓기
     Like.objects.create(user=user, product=product, is_liked=True)
+
     url = reverse("product-like", kwargs={"product_id": product.id})
-
-    response = auth_client.post(url)
-
-    assert response.status_code == 200
-    assert response.data["liked"] is True  # 상태 유지
-
-
-@pytest.mark.django_db
-def test_like_cancel_success(auth_client, product, user):
-    # 선행: 찜 되어 있어야 함
-    Like.objects.create(user=user, product=product, is_liked=True)
-    url = reverse("product-unlike", kwargs={"product_id": product.id})
-
-    response = auth_client.post(url)
+    response = auth_client.delete(url)
 
     assert response.status_code == 200
     assert response.data["liked"] is False
@@ -73,22 +62,21 @@ def test_like_cancel_success(auth_client, product, user):
     like = Like.objects.get(user=user, product=product)
     assert like.is_liked is False
 
-
 @pytest.mark.django_db
-def test_like_cancel_no_like_record(auth_client, product):
-    url = reverse("product-unlike", kwargs={"product_id": product.id})
-    response = auth_client.post(url)
+def test_product_like_delete_fail_no_like_record(auth_client, product):
+    url = reverse("product-like", kwargs={"product_id": product.id})
+    response = auth_client.delete(url)
 
     assert response.status_code == 400
     assert response.data["detail"] == "찜한 내역이 없습니다."
 
 
 @pytest.mark.django_db
-def test_like_cancel_already_unliked(auth_client, product, user):
+def test_product_like_delete_fail_already_unliked(auth_client, product, user):
     Like.objects.create(user=user, product=product, is_liked=False)
-    url = reverse("product-unlike", kwargs={"product_id": product.id})
 
-    response = auth_client.post(url)
+    url = reverse("product-like", kwargs={"product_id": product.id})
+    response = auth_client.delete(url)
 
     assert response.status_code == 400
     assert response.data["detail"] == "이미 찜하지 않은 상태입니다."
