@@ -56,11 +56,28 @@ def test_product_like_list(auth_client, liked_products):
     assert res.data["count"] == 2
     assert len(res.data["results"]) == 2
 
-    product_names = [item["name"] for item in res.data["results"]]
-    assert "샤넬 No.5" in product_names
-    assert "딥디크 탐다오" in product_names
+    results = res.data["results"]
+    assert results[0]["name"] == "딥디크 탐다오"
+    assert results[1]["name"] == "샤넬 No.5"
 
     for item in res.data["results"]:
         assert item["is_liked"] is True
         assert "liked_at" in item
         assert "product_id" in item
+
+
+import pytest
+from django.urls import reverse
+from rest_framework.test import APIClient
+
+from apps.users.models import User
+
+
+@pytest.mark.django_db
+def test_product_like_list_empty(auth_client):
+    url = reverse("product-like-list")  # 예: path("likes/", ProductLikeListView.as_view(), name="product-like-list")
+    response = auth_client.get(url)
+
+    assert response.status_code == 200
+    assert response.data["count"] == 0
+    assert response.data["results"] == []
