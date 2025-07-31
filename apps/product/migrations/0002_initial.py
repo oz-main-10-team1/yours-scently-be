@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="usage_histories",
+                related_name="user_usage_histories",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
