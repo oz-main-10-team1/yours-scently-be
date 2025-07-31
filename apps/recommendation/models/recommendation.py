@@ -9,20 +9,7 @@ class Recommendation(models.Model):
         AI = "ai", "AI 기반"
         SURVEY = "survey", "설문 기반"
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-    )
-    perfume = models.ForeignKey(
-        Perfume,
-        on_delete=models.CASCADE,
-    )
-    similarity_score = models.DecimalField(
-        max_digits=5,
-        decimal_places=4,
-        null=True,
-        blank=True,
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recommendations")
     type = models.CharField(
         max_length=10,
         choices=Type.choices,
@@ -32,3 +19,7 @@ class Recommendation(models.Model):
 
     class Meta:
         db_table = "recommendation"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"[{self.type}] Recommendation by {self.user} at {self.created_at}"
