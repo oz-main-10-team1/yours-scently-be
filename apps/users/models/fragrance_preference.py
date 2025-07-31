@@ -1,22 +1,23 @@
 from django.conf import settings
 from django.db import models
 
-from apps.users.models.accord import Accord
-from apps.users.models.note import Note
-
 
 class FragrancePreference(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fragrance_preference")
+
     preferred_top_notes = models.ManyToManyField(
-        Note, related_name="preferred_top_notes", limit_choices_to={"type": "top"}
+        "product.Note", related_name="preferred_top_notes", limit_choices_to={"type": "top"}
     )
+
     preferred_middle_notes = models.ManyToManyField(
-        Note, related_name="preferred_middle_notes", limit_choices_to={"type": "middle"}
+        "product.Note", related_name="preferred_middle_notes", limit_choices_to={"type": "middle"}
     )
+
     preferred_base_notes = models.ManyToManyField(
-        Note, related_name="preferred_base_notes", limit_choices_to={"type": "base"}
+        "product.Note", related_name="preferred_base_notes", limit_choices_to={"type": "base"}
     )
-    preferred_accords = models.ManyToManyField(Accord, related_name="preferred_accords")
+
+    preferred_accords = models.ManyToManyField("product.Accord", related_name="preferred_accords")
 
     class IntensityChoices(models.TextChoices):
         PARFUM = "parfum", "Parfum (20~30%, 8~12시간)"
@@ -26,7 +27,9 @@ class FragrancePreference(models.Model):
         EAU_FRAICHE = "eau_fraiche", "Eau Fraîche (1~3%, 1~2시간)"
 
     intensity = models.CharField(max_length=20, choices=IntensityChoices.choices)
+
     preferences = models.JSONField(default=dict)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
