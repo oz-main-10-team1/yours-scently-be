@@ -27,6 +27,7 @@ from drf_spectacular.views import (
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("api/v1/auth/", include("apps.users.urls")),
+    path("api/v1/", include("apps.product.urls")),
 ]
 
 if settings.DEBUG:
