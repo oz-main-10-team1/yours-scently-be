@@ -31,7 +31,7 @@ def test_user_profile_authenticated(api_client, user):
     # 로그인 (JWT나 Session 방식에 따라 다름. 여기선 force_authenticate 사용)
     api_client.force_authenticate(user=user)
 
-    url = reverse("my-profile")  # name="user-profile"인 URL
+    url = reverse("my-profile")  # name="my-profile"인 URL
     response = api_client.get(url)
 
     assert response.status_code == 200

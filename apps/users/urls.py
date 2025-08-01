@@ -34,6 +34,6 @@ urlpatterns = [
     path("login/naver/", NaverLoginAPIView.as_view(), name="naver-login"),
     # 회원 탈퇴
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
-    # 내정보 수정
-    path("mypage", MyProfileView.as_view(), name="my-profile"),
+    # 내정보 조회
+    path("mypage/", MyProfileView.as_view(), name="my-profile"),
 ]
