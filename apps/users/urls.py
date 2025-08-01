@@ -30,7 +30,7 @@ urlpatterns = [
     # 로그인
     path("login/email/", EmailLoginView.as_view(), name="email-login"),
     path("login/kakao/", KakaoLoginAPIView.as_view(), name="kakao-login"),
-    path("auth/naver/", NaverLoginAPIView.as_view(), name="naver-login"),
+    path("login/naver/", NaverLoginAPIView.as_view(), name="naver-login"),
     # 회원 탈퇴
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
 ]

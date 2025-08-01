@@ -27,8 +27,8 @@ def client():
     return APIClient()
 
 
-@patch("apps.users.utils.naver.get_naver_access_token")
-@patch("apps.users.utils.naver.verify_naver_token")
+@patch("apps.users.views.auth.naver_social_login.get_naver_access_token")
+@patch("apps.users.views.auth.naver_social_login.verify_naver_token")
 def test_naver_login_success(mock_verify_token, mock_get_token, client):
     mock_get_token.return_value = "mocked-access-token"
     mock_verify_token.return_value = NAVER_USER_INFO
@@ -79,8 +79,8 @@ def test_naver_login_missing_required_fields(mock_verify_token, mock_get_token, 
     assert "필수 정보 누락" in response.data["detail"]
 
 
-@patch("apps.users.utils.naver.get_naver_access_token")
-@patch("apps.users.utils.naver.verify_naver_token")
+@patch("apps.users.views.auth.naver_social_login.get_naver_access_token")
+@patch("apps.users.views.auth.naver_social_login.verify_naver_token")
 def test_naver_login_existing_email_without_social_account(mock_verify_token, mock_get_token, client):
     mock_get_token.return_value = "mocked-access-token"
     mock_verify_token.return_value = NAVER_USER_INFO

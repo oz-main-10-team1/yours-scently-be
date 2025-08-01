@@ -1,6 +1,8 @@
+import logging
 import os
 from typing import Any, Dict, Optional, cast
 
+import logger
 import requests
 
 
@@ -21,24 +23,32 @@ def get_naver_access_token(code: str, redirect_uri: str, state: Optional[str] = 
     if state:
         params["state"] = state
 
-    response = requests.get("https://nid.naver.com/oauth2.0/token", params=params)
-    if response.status_code != 200:
+    try:
+        response = requests.get("https://nid.naver.com/oauth2.0/token", params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("access_token")
+    except requests.RequestException as e:
+        logger.warning(f"[NAVER] Failed to get access token: {e}")
+        if response is not None:
+            logger.debug(f"[NAVER] Status: {response.status_code}, Body: {response.text}")
         return None
-
-    data = response.json()
-    return data.get("access_token")
 
 
 def verify_naver_token(access_token: str) -> Optional[Dict[str, Optional[str]]]:
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get("https://openapi.naver.com/v1/nid/me", headers=headers)
+    try:
+        response = requests.get("https://openapi.naver.com/v1/nid/me", headers=headers)
+        response.raise_for_status()
+        data = response.json()
 
-    if response.status_code != 200:
+        if data.get("resultcode") != "00":
+            logger.warning(f"[NAVER] Invalid result code from user info: {data}")
+            return None
+
+        return data.get("response", {})
+    except requests.RequestException as e:
+        logger.warning(f"[NAVER] Failed to verify token: {e}")
+        if response is not None:
+            logger.debug(f"[NAVER] Status: {response.status_code}, Body: {response.text}")
         return None
-
-    data = response.json()
-    if data.get("resultcode") != "00":
-        return None
-
-    profile = data.get("response", {})
-    return profile

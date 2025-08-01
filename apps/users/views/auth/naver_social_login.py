@@ -141,4 +141,4 @@ class NaverLoginAPIView(APIView, SocialLoginRedirectUriMixin):
             return User.Gender.MALE
         elif gender == "F":
             return User.Gender.FEMALE
-        return ""
+        return User.Gender.MALE
