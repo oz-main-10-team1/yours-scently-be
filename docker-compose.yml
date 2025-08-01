@@ -2,7 +2,7 @@ services:
   django:
     container_name: django
     env_file:
-      - envs/.local.env
+      - .local.env/.local..local.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.local
     build:

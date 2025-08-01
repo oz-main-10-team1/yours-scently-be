@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.product.views.product import ProductView
 from apps.users.views.auth.email_auth import (
     SendEmailCodeView,
     VerifyEmailCodeView,
@@ -31,4 +32,7 @@ urlpatterns = [
     path("login/kakao/", KakaoLoginAPIView.as_view(), name="kakao-login"),
     # 회원 탈퇴
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
+
+    #상품 상품목록조회
+    path("products/", ProductView.as_view(), name="product-list"),
 ]
