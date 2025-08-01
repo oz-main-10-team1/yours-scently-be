@@ -1,8 +1,6 @@
-import logging
 import os
 from typing import Any, Dict, Optional, cast
 
-import logger
 import requests
 
 
@@ -28,10 +26,7 @@ def get_naver_access_token(code: str, redirect_uri: str, state: Optional[str] = 
         response.raise_for_status()
         data = response.json()
         return data.get("access_token")
-    except requests.RequestException as e:
-        logger.warning(f"[NAVER] Failed to get access token: {e}")
-        if response is not None:
-            logger.debug(f"[NAVER] Status: {response.status_code}, Body: {response.text}")
+    except requests.RequestException:
         return None
 
 
@@ -43,12 +38,8 @@ def verify_naver_token(access_token: str) -> Optional[Dict[str, Optional[str]]]:
         data = response.json()
 
         if data.get("resultcode") != "00":
-            logger.warning(f"[NAVER] Invalid result code from user info: {data}")
             return None
 
         return data.get("response", {})
-    except requests.RequestException as e:
-        logger.warning(f"[NAVER] Failed to verify token: {e}")
-        if response is not None:
-            logger.debug(f"[NAVER] Status: {response.status_code}, Body: {response.text}")
+    except requests.RequestException:
         return None
