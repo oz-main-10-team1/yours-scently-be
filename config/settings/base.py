@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+
 load_dotenv(dotenv_path=BASE_DIR / "envs/.local.env")
 
 SECRET_KEY: Optional[str] = os.getenv("DJANGO_SECRET_KEY")
