@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 from apps.users.models import User
 from apps.users.models.social_user import SocialUser
 from apps.users.utils.redis_utils import (
+    mark_email_find_phone_as_verified,
     mark_reset_email_as_verified,
     store_reset_email_code,
 )
@@ -32,6 +33,7 @@ def verified_phone(monkeypatch):
 
 # 이메일 찾기 테스트
 def test_email_find_success(api_client: APIClient, test_user: User, verified_phone) -> None:
+    mark_email_find_phone_as_verified(test_user.phone_number)
     url = reverse("email-find")
     response = api_client.post(url, data={"name": test_user.name, "phone_number": test_user.phone_number})
     assert response.status_code == 200
@@ -40,6 +42,8 @@ def test_email_find_success(api_client: APIClient, test_user: User, verified_pho
 
 
 def test_email_find_not_found(api_client: APIClient, verified_phone) -> None:
+    fake_phone = "01000000000"
+    mark_email_find_phone_as_verified(fake_phone)
     url = reverse("email-find")
     response = api_client.post(url, data={"name": "존재하지않는", "phone_number": "01000000000"})
     assert response.status_code == 404
