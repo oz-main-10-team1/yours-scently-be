@@ -1,29 +1,26 @@
 from rest_framework import serializers
 
-from apps.product.models import Accord, Note
+from apps.product.models import Note
 from apps.users.models.fragrance_preference import FragrancePreference
 
 
 class FragrancePreferenceSerializer(serializers.ModelSerializer):
-    # user_id는 읽기 전용 필드로 응답에 포함
     user_id = serializers.IntegerField(source="user.id", read_only=True)
 
-    # 필수로 입력받아야 할 필드들
-    preferred_top_notes = serializers.PrimaryKeyRelatedField(
-        many=True, required=True, queryset=Note.objects.filter(type="top")
+    preferred_top_notes = serializers.SlugRelatedField(
+        many=True, queryset=Note.objects.filter(type="top"), slug_field="name"
     )
-    preferred_middle_notes = serializers.PrimaryKeyRelatedField(
-        many=True, required=True, queryset=Note.objects.filter(type="middle")
+    preferred_middle_notes = serializers.SlugRelatedField(
+        many=True, queryset=Note.objects.filter(type="middle"), slug_field="name"
     )
-    preferred_base_notes = serializers.PrimaryKeyRelatedField(
-        many=True, required=True, queryset=Note.objects.filter(type="base")
+    preferred_base_notes = serializers.SlugRelatedField(
+        many=True, queryset=Note.objects.filter(type="base"), slug_field="name"
     )
 
     class Meta:
         model = FragrancePreference
         fields = [
             "user_id",
-            "user",
             "preferred_top_notes",
             "preferred_middle_notes",
             "preferred_base_notes",
@@ -32,4 +29,4 @@ class FragrancePreferenceSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["user", "created_at", "updated_at"]
+        read_only_fields = ["user_id", "created_at", "updated_at"]

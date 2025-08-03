@@ -40,9 +40,5 @@ urlpatterns = [
     # 내 정보 조회
     path("mypage/", MyProfileView.as_view(), name="my-profile"),
     # 사용자 취향 등록
-    path(
-        "user/<int:user_id>/fragrance-preference",
-        FragrancePreferenceCreateView.as_view(),
-        name="create-fragrance-preference",
-    ),
+    path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
 ]

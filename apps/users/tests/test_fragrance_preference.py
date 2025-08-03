@@ -30,9 +30,17 @@ def user(db):
 @pytest.fixture
 def auth_client(user):
     client = APIClient()
-    res = client.post(reverse("token_obtain_pair"), {"email": EMAIL, "password": PASSWORD}, format="json")
-    assert res.status_code == 200, f"JWT 토큰 발급 실패: {res.content}"
-    access_token = res.json()["access"]
+    login_url = reverse("email-login")
+    res = client.post(login_url, {"email": EMAIL, "password": PASSWORD}, format="json")
+
+    print("로그인 응답:", res.json())
+
+    assert res.status_code == 200, f"이메일 로그인 실패: {res.content}"
+
+    token_data = res.json()
+    access_token = token_data.get("access") or token_data.get("access_token") or token_data.get("token")
+
+    assert access_token, f"access 토큰 없음: {token_data}"  # 없을 경우 에러 메시지 출력
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
     return client
 
@@ -64,28 +72,28 @@ def base_notes(db):
 @pytest.fixture
 def fragrance_payload(top_notes, middle_notes, base_notes):
     return {
-        "preferred_top_notes": [note.id for note in top_notes],
-        "preferred_middle_notes": [note.id for note in middle_notes],
-        "preferred_base_notes": [note.id for note in base_notes],
+        "preferred_top_notes": [note.name for note in top_notes],
+        "preferred_middle_notes": [note.name for note in middle_notes],
+        "preferred_base_notes": [note.name for note in base_notes],
         "intensity": "eau_de_toilette",
         "preferences": {"daytime_use": False},
     }
 
 
 @pytest.mark.django_db
-def test_register_fragrance_preference_success(auth_client, user, fragrance_payload):
-    url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
+def test_register_fragrance_preference_success(auth_client, fragrance_payload):
+    url = reverse("create-fragrance-preference")
     res = auth_client.post(url, data=fragrance_payload, format="json")
 
     assert res.status_code == 201
     data = res.json()
-    assert data["user"] == user.id
     assert data["intensity"] == fragrance_payload["intensity"]
+    assert set(data["preferred_top_notes"]) == set(fragrance_payload["preferred_top_notes"])
 
 
 @pytest.mark.django_db
-def test_register_fragrance_preference_missing_field(auth_client, user, fragrance_payload):
-    url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
+def test_register_fragrance_preference_missing_field(auth_client, fragrance_payload):
+    url = reverse("create-fragrance-preference")
     fragrance_payload.pop("preferred_top_notes")
 
     res = auth_client.post(url, data=fragrance_payload, format="json")
@@ -94,27 +102,21 @@ def test_register_fragrance_preference_missing_field(auth_client, user, fragranc
 
 
 @pytest.mark.django_db
-def test_register_fragrance_preference_unauthorized(user, fragrance_payload):
+def test_register_fragrance_preference_unauthorized(fragrance_payload):
     client = APIClient()
-    url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
+    url = reverse("create-fragrance-preference")
     res = client.post(url, data=fragrance_payload, format="json")
     assert res.status_code == 401
 
 
 @pytest.mark.django_db
-def test_register_fragrance_preference_forbidden(user, fragrance_payload):
-    other_user = User.objects.create_user(
-        email=f"other_{uuid.uuid4().hex[:5]}@example.com",
-        password="password123",
-        nickname=f"u{uuid.uuid4().hex[:5]}"[:10],
-        phone_number=f"010{uuid.uuid4().hex[:8]}"[:11],
-    )
+def test_register_fragrance_preference_duplicate(auth_client, user, fragrance_payload):
+    url = reverse("create-fragrance-preference")
 
-    client = APIClient()
-    client.force_authenticate(user=other_user)
+    res1 = auth_client.post(url, data=fragrance_payload, format="json")
+    assert res1.status_code == 201
 
-    url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
-    res = client.post(url, data=fragrance_payload, format="json")
-
-    assert res.status_code == 403
-    assert "권한" in res.json()["detail"]
+    res2 = auth_client.post(url, data=fragrance_payload, format="json")
+    assert res2.status_code == status.HTTP_400_BAD_REQUEST
+    assert "detail" in res2.json()
+    assert "이미 등록된 향기 취향이 존재합니다." in res2.json()["detail"]
