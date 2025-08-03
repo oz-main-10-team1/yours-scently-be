@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView  # ✅ JWT 토큰 발급 뷰 추가
 
 from apps.users.views.auth.email_auth import (
     SendEmailCodeView,
@@ -15,6 +16,9 @@ from apps.users.views.auth.signup import (
     SignUpAPIView,
     SignupNicknameCheckAPIView,
 )
+from apps.users.views.fragrance.fragrance_preference import (
+    FragrancePreferenceCreateView,
+)
 from apps.users.views.my_profile import MyProfileView
 from apps.users.views.withdrawal import WithdrawalAPIView
 
@@ -25,7 +29,7 @@ urlpatterns = [
     # 이메일 인증
     path("signup/email/send-code/", SendEmailCodeView.as_view(), name="email-send-code"),
     path("signup/email/verify/", VerifyEmailCodeView.as_view(), name="email-verify"),
-    # 휴대폰인증
+    # 휴대폰 인증
     path("signup/phone/send-code/", SendPhoneCodeAPIView.as_view(), name="phone-send-code"),
     path("signup/phone/verify/", VerifyPhoneCodeAPIView.as_view(), name="phone-verify"),
     # 로그인
@@ -34,6 +38,14 @@ urlpatterns = [
     path("login/naver/", NaverLoginAPIView.as_view(), name="naver-login"),
     # 회원 탈퇴
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
-    # 내정보 조회
+    # 내 정보 조회
     path("mypage/", MyProfileView.as_view(), name="my-profile"),
+    # 사용자 취향 등록
+    path(
+        "user/<int:user_id>/fragrance-preference",
+        FragrancePreferenceCreateView.as_view(),
+        name="create-fragrance-preference",
+    ),
+    # JWT 토큰 발급 경로
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
 ]
