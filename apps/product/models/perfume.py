@@ -20,6 +20,8 @@ class Perfume(models.Model):
     brand = models.CharField(max_length=50)
     release_year = models.IntegerField()
 
+    category = models.CharField(max_length=20, choices=CategoryChoices.choices, default=CategoryChoices.EAU_DE_PARFUM)
+
     top_notes = models.ManyToManyField(Note, related_name="top_perfumes", limit_choices_to={"type": "top"})
     middle_notes = models.ManyToManyField(Note, related_name="middle_perfumes", limit_choices_to={"type": "middle"})
     base_notes = models.ManyToManyField(Note, related_name="base_perfumes", limit_choices_to={"type": "base"})
