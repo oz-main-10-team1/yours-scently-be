@@ -1,5 +1,4 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView  # ✅ JWT 토큰 발급 뷰 추가
 
 from apps.users.views.auth.email_auth import (
     SendEmailCodeView,
@@ -46,6 +45,4 @@ urlpatterns = [
         FragrancePreferenceCreateView.as_view(),
         name="create-fragrance-preference",
     ),
-    # JWT 토큰 발급 경로
-    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
 ]

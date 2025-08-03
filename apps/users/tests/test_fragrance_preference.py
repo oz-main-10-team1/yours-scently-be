@@ -3,6 +3,7 @@ import uuid
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.product.models import Note
@@ -29,7 +30,7 @@ def user(db):
 @pytest.fixture
 def auth_client(user):
     client = APIClient()
-    res = client.post("/api/token/", {"email": EMAIL, "password": PASSWORD}, format="json")
+    res = client.post(reverse("token_obtain_pair"), {"email": EMAIL, "password": PASSWORD}, format="json")
     assert res.status_code == 200, f"JWT 토큰 발급 실패: {res.content}"
     access_token = res.json()["access"]
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
@@ -76,7 +77,6 @@ def test_register_fragrance_preference_success(auth_client, user, fragrance_payl
     url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
     res = auth_client.post(url, data=fragrance_payload, format="json")
 
-    print("응답 내용:", res.content)
     assert res.status_code == 201
     data = res.json()
     assert data["user"] == user.id
@@ -89,7 +89,7 @@ def test_register_fragrance_preference_missing_field(auth_client, user, fragranc
     fragrance_payload.pop("preferred_top_notes")
 
     res = auth_client.post(url, data=fragrance_payload, format="json")
-    assert res.status_code in [400, 422]
+    assert res.status_code == status.HTTP_400_BAD_REQUEST
     assert "preferred_top_notes" in res.json()
 
 

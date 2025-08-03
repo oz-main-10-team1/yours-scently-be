@@ -9,10 +9,15 @@ class FragrancePreferenceSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     # 필수로 입력받아야 할 필드들
-    preferred_top_notes = serializers.PrimaryKeyRelatedField(many=True, required=True, queryset=Note.objects.all())
-    preferred_middle_notes = serializers.PrimaryKeyRelatedField(many=True, required=True, queryset=Note.objects.all())
-    preferred_base_notes = serializers.PrimaryKeyRelatedField(many=True, required=True, queryset=Note.objects.all())
-    preferred_accords = serializers.PrimaryKeyRelatedField(many=True, required=False, queryset=Accord.objects.all())
+    preferred_top_notes = serializers.PrimaryKeyRelatedField(
+        many=True, required=True, queryset=Note.objects.filter(type="top")
+    )
+    preferred_middle_notes = serializers.PrimaryKeyRelatedField(
+        many=True, required=True, queryset=Note.objects.filter(type="middle")
+    )
+    preferred_base_notes = serializers.PrimaryKeyRelatedField(
+        many=True, required=True, queryset=Note.objects.filter(type="base")
+    )
 
     class Meta:
         model = FragrancePreference
@@ -22,7 +27,6 @@ class FragrancePreferenceSerializer(serializers.ModelSerializer):
             "preferred_top_notes",
             "preferred_middle_notes",
             "preferred_base_notes",
-            "preferred_accords",
             "intensity",
             "preferences",
             "created_at",
