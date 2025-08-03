@@ -22,11 +22,8 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from rest_framework_simplejwt.views import TokenObtainPairView  # ✅ 추가
 
 urlpatterns: list[URLPattern | URLResolver] = [
-    # ✅ JWT 토큰 발급 경로 직접 등록
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     # 앱 라우팅
     path("api/v1/auth/", include("apps.users.urls")),
     path("api/v1/", include("apps.product.urls")),
