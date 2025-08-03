@@ -5,6 +5,10 @@ from apps.users.views.auth.email_auth import (
     VerifyEmailCodeView,
 )
 from apps.users.views.auth.email_login import EmailLoginView
+from apps.users.views.auth.find_email_phone_verification import (
+    EmailFindPhoneSendCodeAPIView,
+    EmailFindPhoneVerifyCodeAPIView,
+)
 from apps.users.views.auth.kakao_social_login import KakaoLoginAPIView
 from apps.users.views.auth.naver_social_login import NaverLoginAPIView
 from apps.users.views.auth.phone_auth import (
@@ -14,6 +18,12 @@ from apps.users.views.auth.phone_auth import (
 from apps.users.views.auth.signup import (
     SignUpAPIView,
     SignupNicknameCheckAPIView,
+)
+from apps.users.views.find_account_views import (
+    EmailFindView,
+    PasswordChangeView,
+    PasswordResetEmailSendView,
+    PasswordResetVerifyCodeView,
 )
 from apps.users.views.fragrance.fragrance_preference import (
     FragrancePreferenceCreateView,
@@ -39,6 +49,15 @@ urlpatterns = [
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
     # 내 정보 조회
     path("mypage/", MyProfileView.as_view(), name="my-profile"),
+    # 계정 찾기
+    path("account/find-email/", EmailFindView.as_view(), name="email-find"),
+    path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
+    path("account/verify-code/", PasswordResetVerifyCodeView.as_view(), name="verify-code"),
+    path("account/change-password/", PasswordChangeView.as_view(), name="change-password"),
+    path("account/find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
+    path("account/find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
+    path("find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
+    path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     # 사용자 취향 등록
     path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
 ]
