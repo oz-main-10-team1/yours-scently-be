@@ -16,8 +16,6 @@ Including another URLconf
 """
 
 from django.conf import settings
-
-# from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -26,6 +24,7 @@ from drf_spectacular.views import (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    # 앱 라우팅
     path("api/v1/auth/", include("apps.users.urls")),
     path("api/v1/", include("apps.product.urls")),
 ]
