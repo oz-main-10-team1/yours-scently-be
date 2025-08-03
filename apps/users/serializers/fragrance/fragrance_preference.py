@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.product.models import Accord, Note  # 노트와 어코드 모델 import
+from apps.product.models import Accord, Note
 from apps.users.models.fragrance_preference import FragrancePreference
 
 
@@ -17,8 +17,8 @@ class FragrancePreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FragrancePreference
         fields = [
-            "user_id",  # 추가: 응답에 포함되도록
-            "user",  # 실제 DB 저장용
+            "user_id",
+            "user",
             "preferred_top_notes",
             "preferred_middle_notes",
             "preferred_base_notes",

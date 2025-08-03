@@ -1,26 +1,28 @@
 import uuid
 
 import pytest
-from decouple import config
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.product.models import Note  # 실제 Note 모델 import
+from apps.product.models import Note
 
 User = get_user_model()
 
-EMAIL = config("EMAIL_HOST_USER")
+EMAIL = "testuser@example.com"
 PASSWORD = "password123"
 NICKNAME = f"u{uuid.uuid4().hex[:8]}"[:10]
-PHONE_NUMBER = f"010{uuid.uuid4().hex[:8]}"[:11]  # 랜덤한 고유 전화번호
+PHONE_NUMBER = f"010{uuid.uuid4().hex[:8]}"[:11]
 
 
 @pytest.fixture
 def user(db):
     return User.objects.create_user(
-        email=EMAIL, password=PASSWORD, nickname=NICKNAME, phone_number=PHONE_NUMBER, is_active=True
+        email=EMAIL,
+        password=PASSWORD,
+        nickname=NICKNAME,
+        phone_number=PHONE_NUMBER,
+        is_active=True,
     )
 
 
@@ -75,7 +77,6 @@ def test_register_fragrance_preference_success(auth_client, user, fragrance_payl
     res = auth_client.post(url, data=fragrance_payload, format="json")
 
     print("응답 내용:", res.content)
-
     assert res.status_code == 201
     data = res.json()
     assert data["user"] == user.id
@@ -85,7 +86,7 @@ def test_register_fragrance_preference_success(auth_client, user, fragrance_payl
 @pytest.mark.django_db
 def test_register_fragrance_preference_missing_field(auth_client, user, fragrance_payload):
     url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
-    fragrance_payload.pop("preferred_top_notes")  # 필수 필드 제거
+    fragrance_payload.pop("preferred_top_notes")
 
     res = auth_client.post(url, data=fragrance_payload, format="json")
     assert res.status_code in [400, 422]
@@ -97,8 +98,7 @@ def test_register_fragrance_preference_unauthorized(user, fragrance_payload):
     client = APIClient()
     url = reverse("create-fragrance-preference", kwargs={"user_id": user.id})
     res = client.post(url, data=fragrance_payload, format="json")
-
-    assert res.status_code == 401  # 인증 실패
+    assert res.status_code == 401
 
 
 @pytest.mark.django_db
