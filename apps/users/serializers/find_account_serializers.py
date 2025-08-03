@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 
@@ -34,4 +35,5 @@ class PasswordChangeRequestSerializer(serializers.Serializer[Dict[str, Any]]):
     def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         if data["new_password"] != data["new_password_confirm"]:
             raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+        validate_password(data["new_password"])
         return data
