@@ -9,7 +9,7 @@ class Perfume(models.Model):
         MEDIUM = "medium", "Medium"
         STRONG = "strong", "Strong"
 
-    class PerfumeType(models.TextChoices):
+    class CategoryChoices(models.TextChoices):
         PARFUM = "parfum", "퍼퓸"
         EAU_DE_PARFUM = "eau_de_parfum", "오드 퍼퓸"
         EAU_DE_TOILETTE = "eau_de_toilette", "오드 뚜왈렛"
