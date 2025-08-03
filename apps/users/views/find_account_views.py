@@ -20,6 +20,7 @@ from apps.users.utils.redis_utils import (
     get_reset_email_code,
     is_email_find_phone_verified,
     is_phone_verified,
+    is_reset_email_verified,
     mark_reset_email_as_verified,
     store_reset_email_code,
 )
@@ -126,6 +127,12 @@ class PasswordChangeView(APIView):
 
         email = serializer.validated_data["email"]
         new_password = serializer.validated_data["new_password"]
+
+        if not is_reset_email_verified(email):
+            return Response(
+                {"message": "이메일 인증을 먼저 완료해주세요."},
+                status=400,
+            )
 
         try:
             user = User.objects.get(email=email)

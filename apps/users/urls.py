@@ -54,6 +54,8 @@ urlpatterns = [
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
     path("account/verify-code/", PasswordResetVerifyCodeView.as_view(), name="verify-code"),
     path("account/change-password/", PasswordChangeView.as_view(), name="change-password"),
+    path("account/find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
+    path("account/find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     path("find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
     path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     # 사용자 취향 등록

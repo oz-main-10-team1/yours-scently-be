@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django_redis import get_redis_connection
 from rest_framework.test import APIClient
 
 from apps.users.models import User
@@ -109,6 +110,7 @@ def test_password_change_success(api_client: APIClient, test_user: User) -> None
 
 
 def test_password_change_user_not_found(api_client: APIClient) -> None:
+    mark_reset_email_as_verified("notfound@example.com")
     url = reverse("change-password")
     data = {
         "email": "notfound@example.com",
@@ -130,3 +132,19 @@ def test_password_change_mismatch(api_client: APIClient, test_user: User) -> Non
     response = api_client.post(url, data=data)
     assert response.status_code == 400
     assert "non_field_errors" in response.data
+
+
+def test_password_change_without_email_verification(api_client: APIClient, test_user: User) -> None:
+    redis = get_redis_connection("default")
+    redis.delete(f"reset:email:verified:{test_user.email}")
+
+    url = reverse("change-password")
+    data = {
+        "email": test_user.email,
+        "new_password": "newpass123!",
+        "new_password_confirm": "newpass123!",
+    }
+    response = api_client.post(url, data)
+
+    assert response.status_code == 400
+    assert response.data["message"] == "이메일 인증을 먼저 완료해주세요."
