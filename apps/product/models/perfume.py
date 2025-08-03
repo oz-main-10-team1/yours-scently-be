@@ -9,9 +9,18 @@ class Perfume(models.Model):
         MEDIUM = "medium", "Medium"
         STRONG = "strong", "Strong"
 
+    class Concentration(models.TextChoices):
+        PARFUM = "parfum", "퍼퓸"
+        EAU_DE_PARFUM = "eau_de_parfum", "오드 퍼퓸"
+        EAU_DE_TOILETTE = "eau_de_toilette", "오드 뚜왈렛"
+        EAU_DE_COLOGNE = "eau_de_cologne", "오드 코롱"
+        EAU_FRAICHE = "eau_fraiche", "오 프레쉬"
+
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=50)
     release_year = models.IntegerField()
+
+    concentration = models.CharField(max_length=20, choices=Concentration.choices, default=Concentration.EAU_DE_PARFUM)
 
     top_notes = models.ManyToManyField(Note, related_name="top_perfumes", limit_choices_to={"type": "top"})
     middle_notes = models.ManyToManyField(Note, related_name="middle_perfumes", limit_choices_to={"type": "middle"})
