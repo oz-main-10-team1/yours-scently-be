@@ -1,6 +1,6 @@
-import random
-
 from django.core.cache import cache
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -15,6 +15,20 @@ from apps.recommendation.serializers.purpose_recommendation_serializer import (
 class ProductBannerByCategoryView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        responses={status.HTTP_200_OK: ProductBannerByCategorySerializer(many=True)},
+        description="선택된 카테고리의 향수 반환",
+        tags=["recommendation-purpose"],
+        parameters=[
+            OpenApiParameter(
+                name="category",
+                description="카테고리 (Daily, Special, Relax, Outdoor 중 하나)",
+                required=True,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+            )
+        ],
+    )
     def get(self, request, category: str):
         category = category.capitalize()
         valid_categories = set(Product.Category.values)
