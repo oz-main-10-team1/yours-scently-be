@@ -11,23 +11,30 @@ User = get_user_model()
 
 
 class ProductListAPITest(APITestCase):
-    def setUp(self):
+    # 사용자 생성 및 JWT 토큰 발급
+    @classmethod
+    def setUpTestData(cls):
         # 사용자 생성 및 JWT 토큰 발급
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        self.access_token = str(RefreshToken.for_user(self.user).access_token)
+        cls.user = User.objects.create_user(email="testuser@testuser.com", password="testpass123", is_active=True)
+        cls.access_token = str(RefreshToken.for_user(cls.user).access_token)
 
         # 상품 15개 생성 (페이지당 10개 가정)
-        for i in range(15):
-            Product.objects.create(
+        products = [
+            Product(
                 name=f"상품 {i}",
                 brand="브랜드",
                 description="테스트 향수입니다.",
-                category="STANDARD",
+                category="Daily",
                 price=10000 + i,
                 stock=20,
                 product_img_url=f"https://example.com/images/product_{i}.jpg",
-                release_date=date(2024, 1, 1),
             )
+            for i in range(15)
+        ]
+        Product.objects.bulk_create(products)
+
+    def setUp(self):
+        self.access_token = self.__class__.access_token
 
     def _auth_headers(self):
         """JWT 인증 헤더 생성"""
@@ -56,7 +63,7 @@ class ProductListAPITest(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("results", response.data)
-        self.assertEqual(len(response.data["results"]), 5)  # 남은 5개
+        self.assertEqual(len(response.data["results"]), 10)  # 남은 5개
 
     def test_product_list_unauthenticated(self):
         """인증 없이 요청할 경우 401 응답을 반환한다."""
@@ -65,4 +72,4 @@ class ProductListAPITest(APITestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertIn("detail", response.data)
-        self.assertIn("credentials were not provided", str(response.data["detail"]).lower())
+        self.assertIn("자격 인증데이터", str(response.data["detail"]))

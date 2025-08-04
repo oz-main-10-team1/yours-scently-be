@@ -8,7 +8,6 @@ urlpatterns = [
     # 좋아요
     path("like/<int:product_id>/", ProductLikeAPIView.as_view(), name="product-like"),
     path("liked/products/", ProductLikeListView.as_view(), name="product-like-list"),
-
     # 상품목록 조회
-    path("product/",ProductListView.as_view(), name="product-list"),
+    path("product/", ProductListView.as_view(), name="product-list"),
 ]
