@@ -31,7 +31,6 @@ from apps.users.views.fragrance.fragrance_preference import (
 from apps.users.views.fragrance.fragrance_preference_delete import (
     FragrancePreferenceDeleteView,
 )
-from apps.users.views.my_profile import MyProfileView
 from apps.users.views.my_profile import MyProfileUpdateView, MyProfileView
 from apps.users.views.withdrawal import WithdrawalAPIView
 
