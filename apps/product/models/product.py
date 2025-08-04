@@ -18,6 +18,7 @@ class Product(models.Model):
     stock = models.PositiveIntegerField()
     product_img_url = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    views = models.PositiveIntegerField(default=0)
 
     # 펄퓸이랑 1:1 관계 연결
     perfume = models.OneToOneField(Perfume, on_delete=models.CASCADE, related_name="product", null=True, blank=True)
