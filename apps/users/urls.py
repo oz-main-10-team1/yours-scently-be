@@ -38,7 +38,7 @@ urlpatterns = [
     # 회원 탈퇴
     path("deactivate/", WithdrawalAPIView.as_view(), name="user-withdrawal"),
     # 내 정보 조회
-    path("mypage/", MyProfileView.as_view(), name="my-profile"),
+    path("users/me", MyProfileView.as_view(), name="my-profile"),
     # 내 정보 수정
     path("users/me/", MyProfileUpdateView.as_view(), name="my-profile-update"),
     # 사용자 취향 등록
