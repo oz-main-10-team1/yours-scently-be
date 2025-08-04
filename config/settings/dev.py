@@ -1,7 +1,11 @@
 from config.settings.base import *
 
-DEBUG = True
-ALLOWED_HOSTS: list[str] = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(" ")
+DEBUG = False
+
+allowed_hosts_raw = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+if not allowed_hosts_raw:
+    raise ValueError("환경변수 DJANGO_ALLOWED_HOSTS가 설정되지 않았습니다.")
+ALLOWED_HOSTS: list[str] = allowed_hosts_raw.split()
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
