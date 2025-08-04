@@ -19,3 +19,13 @@ class MyProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "email", "created_at", "updated_at", "is_active"]
+
+
+class MyProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("nickname", "phone_number")
+        extra_kwargs = {
+            "nickname": {"required": False},
+            "phone_number": {"required": False},
+        }
