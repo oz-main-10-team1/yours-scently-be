@@ -27,7 +27,7 @@ class TestProductBannerByCategory:
 
     def test_banner_api_success(self, sample_products):
         client = APIClient()
-        url = "/api/v1/recommendation/banner/Outdoor/"
+        url = reverse("product-banner-by-category", kwargs={"category": "Outdoor"})
 
         response = client.get(url)
 
@@ -44,7 +44,7 @@ class TestProductBannerByCategory:
 
     def test_banner_api_invalid_category(self):
         client = APIClient()
-        url = "/api/v1/recommendation/banner/InvalidCategory/"
+        url = reverse("product-banner-by-category", kwargs={"category": "InvalidCategory"})
 
         response = client.get(url)
 

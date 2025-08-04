@@ -17,7 +17,7 @@ class ProductBannerByCategoryView(APIView):
 
     def get(self, request, category: str):
         category = category.capitalize()
-        valid_categories = dict(Product.Category.choices).keys()
+        valid_categories = set(Product.Category.values)
         if category not in valid_categories:
             return Response({"error": "Invalid category."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -27,11 +27,11 @@ class ProductBannerByCategoryView(APIView):
         if cached_data:
             return Response(cached_data)
 
-        queryset = list(
-            Product.objects.filter(category=category).only("id", "name", "brand", "price", "product_img_url")
+        selected = (
+            Product.objects.filter(category=category)
+            .order_by("?")
+            .only("id", "name", "brand", "price", "product_img_url")[:5]
         )
-        selected = random.sample(queryset, min(len(queryset), 5))
-
         serializer = ProductBannerByCategorySerializer(selected, many=True)
         response_data = serializer.data
 
