@@ -16,9 +16,8 @@ class FragrancePreferenceDeleteView(APIView):
             return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         # 향기 취향 존재 여부 확인
-        try:
-            preference = FragrancePreference.objects.get(user_id=user_id)
-        except FragrancePreference.DoesNotExist:
+        preference = FragrancePreference.objects.filter(user_id=user_id).first()
+        if not preference:
             return Response({"detail": "사용자의 취향 정보가 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         # 삭제 수행
