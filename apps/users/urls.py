@@ -31,7 +31,11 @@ from apps.users.views.fragrance.fragrance_preference import (
 from apps.users.views.fragrance.fragrance_preference_delete import (
     FragrancePreferenceDeleteView,
 )
-from apps.users.views.my_profile import MyProfileUpdateView, MyProfileView
+from apps.users.views.my_profile import (
+    ChangePasswordView,
+    MyProfileUpdateView,
+    MyProfileView,
+)
 from apps.users.views.withdrawal import WithdrawalAPIView
 
 urlpatterns = [
@@ -54,6 +58,8 @@ urlpatterns = [
     path("users/me/", MyProfileView.as_view(), name="my-profile"),
     # 내 정보 수정
     path("users/me/update/", MyProfileUpdateView.as_view(), name="my-profile-update"),
+    # 내 정보 수정 - 비밀번호 변경
+    path("users/me/update/password/", ChangePasswordView.as_view(), name="update-change-password"),
     # 계정 찾기
     path("account/find-email/", EmailFindView.as_view(), name="email-find"),
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
