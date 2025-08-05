@@ -1,4 +1,5 @@
 from django.contrib.auth import password_validation
+from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
@@ -66,3 +67,31 @@ class NicknameCheckSerializer(serializers.Serializer):
             "max_length": "닉네임은 10자 이하로 입력해주세요.",
         },
     )
+
+
+# 내 정보 수정 - 휴대폰 번호 변경 인증성공시 변경
+class ChangePhoneWithCodeSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    code = serializers.CharField()
+
+    def validate(self, data):
+        phone = data.get("phone_number")
+        code = data.get("code")
+
+        # redis에서 인증번호 가져오기
+        cached_code = cache.get(f"verify_code:{phone}")
+        if cached_code != code:
+            raise serializers.ValidationError("인증번호가 일치하지 않거나 만료되었습니다.")
+
+        return data
+
+    def save(self):
+        user = self.context["request"].user
+        new_phone = self.validated_data["phone_number"]
+
+        # 실제 사용자 정보에 휴대폰 번호 반영
+        user.phone_number = new_phone
+        user.save()
+
+        # 인증번호는 재사용 방지를 위해 삭제
+        cache.delete(f"verify_code:{new_phone}")
