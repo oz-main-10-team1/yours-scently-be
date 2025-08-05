@@ -54,7 +54,7 @@ class ChangePhoneWithCodeAPITest(APITestCase):
         response = self.client.post(self.url, {"phone_number": self.new_phone, "code": "wrongcode"})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("인증번호가 일치하지 않거나 만료되었습니다.", str(response.data))
+        self.assertEqual(response.data["non_field_errors"], ["인증번호가 일치하지 않거나 만료되었습니다."])
 
         # 사용자 번호는 변경되지 않아야 함
         self.user.refresh_from_db()

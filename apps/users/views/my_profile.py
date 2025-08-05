@@ -82,8 +82,7 @@ class ChangePhoneWithCodeAPIView(APIView):
 
     def post(self, request):
         serializer = ChangePhoneWithCodeSerializer(data=request.data, context={"request": request})
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         serializer.save()
         return Response({"message": "휴대폰 번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
