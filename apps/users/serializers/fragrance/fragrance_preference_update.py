@@ -24,21 +24,31 @@ class FragrancePreferenceUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["user_id", "updated_at"]
 
     def update(self, instance, validated_data):
-        # 향 노트 필드 직접 처리
+        # top_notes, middle_notes, base_notes 처리
         for note_type in ["top", "middle", "base"]:
             field_name = f"{note_type}_notes"
             model_field_name = f"preferred_{note_type}_notes"
 
             if field_name in validated_data:
                 note_names = validated_data.pop(field_name)
+
+                # 노트 객체 필터링
                 note_objs = Note.objects.filter(name__in=note_names, type=note_type)
+
+                # 검증 실패: 존재하지 않는 노트가 포함된 경우
+                if len(note_objs) != len(note_names):
+                    raise serializers.ValidationError(
+                        {field_name: f"{note_type}_notes 중 일부는 존재하지 않는 노트입니다."}
+                    )
+
+                # M2M 필드에 할당
                 getattr(instance, model_field_name).set(note_objs)
 
-        # 나머지 필드 업데이트는 부모 메서드 호출
+        # 나머지 필드 처리 (intensity, preferences 등)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        # N+1 방지를 위해 View에서 prefetch_related 된 객체 기반 처리
+        # 응답 포맷 구성
         return {
             "user_id": instance.user.id,
             "top_notes": [note.name for note in instance.preferred_top_notes.all()],
