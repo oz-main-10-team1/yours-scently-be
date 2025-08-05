@@ -76,11 +76,9 @@ urlpatterns = [
     path("account/find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     path("find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
     path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
-    # 사용자 취향 등록
+    # 사용자 취향
     path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
-    # 사용자 취향 삭제
     path("user/fragrance-preference", FragrancePreferenceDeleteView.as_view(), name="fragrance-preference-delete"),
-    # 사용자 취향 수정
     path(
         "user/fragrance-preference/update", FragrancePreferenceUpdateView.as_view(), name="fragrance-preference-update"
     ),

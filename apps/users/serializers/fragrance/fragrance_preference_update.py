@@ -24,25 +24,21 @@ class FragrancePreferenceUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["user_id", "updated_at"]
 
     def update(self, instance, validated_data):
-        # 향 노트 목록 필드 처리: top, middle, base 각각 처리
+        # 향 노트 필드 직접 처리
         for note_type in ["top", "middle", "base"]:
-            field_name = f"{note_type}_notes"  # 요청에서 넘어오는 필드명
-            model_field_name = f"preferred_{note_type}_notes"  # 실제 모델 필드명
+            field_name = f"{note_type}_notes"
+            model_field_name = f"preferred_{note_type}_notes"
 
             if field_name in validated_data:
                 note_names = validated_data.pop(field_name)
                 note_objs = Note.objects.filter(name__in=note_names, type=note_type)
                 getattr(instance, model_field_name).set(note_objs)
 
-        # 나머지 필드 (intensity, preferences 등) 업데이트
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-        return instance
+        # 나머지 필드 업데이트는 부모 메서드 호출
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        # 응답 포맷 구성 (모델의 preferred_* 필드를 응답 시 top_notes 등으로 매핑)
+        # N+1 방지를 위해 View에서 prefetch_related 된 객체 기반 처리
         return {
             "user_id": instance.user.id,
             "top_notes": [note.name for note in instance.preferred_top_notes.all()],
