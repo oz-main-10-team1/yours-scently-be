@@ -5,11 +5,6 @@ from apps.product.models import Accord, Note
 
 class Perfume(models.Model):
     class IntensityChoices(models.TextChoices):
-        LIGHT = "light", "Light"
-        MEDIUM = "medium", "Medium"
-        STRONG = "strong", "Strong"
-
-    class Concentration(models.TextChoices):
         PARFUM = "parfum", "퍼퓸"
         EAU_DE_PARFUM = "eau_de_parfum", "오드 퍼퓸"
         EAU_DE_TOILETTE = "eau_de_toilette", "오드 뚜왈렛"
@@ -20,7 +15,9 @@ class Perfume(models.Model):
     brand = models.CharField(max_length=50)
     release_year = models.IntegerField()
 
-    concentration = models.CharField(max_length=20, choices=Concentration.choices, default=Concentration.EAU_DE_PARFUM)
+    intensity = models.CharField(
+        max_length=20, choices=IntensityChoices.choices, default=IntensityChoices.EAU_DE_PARFUM
+    )
 
     top_notes = models.ManyToManyField(Note, related_name="top_perfumes", limit_choices_to={"type": "top"})
     middle_notes = models.ManyToManyField(Note, related_name="middle_perfumes", limit_choices_to={"type": "middle"})
@@ -28,7 +25,5 @@ class Perfume(models.Model):
 
     main_accords = models.ManyToManyField(Accord, related_name="perfumes")
 
-    intensity = models.CharField(max_length=10, choices=IntensityChoices.choices)
-
     def __str__(self):
-        return f"{self.brand} - {self.name}"
+        return f"{self.brand or ''} - {self.name or ''}"
