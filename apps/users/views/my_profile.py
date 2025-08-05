@@ -33,6 +33,7 @@ class MyProfileUpdateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 내 정보 수정 - 비밀번호 변경
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
