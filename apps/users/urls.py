@@ -68,4 +68,6 @@ urlpatterns = [
     path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     # 사용자 취향 등록
     path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
+    # 사용자 취향 삭제
+    path("user/fragrance-preference", FragrancePreferenceDeleteView.as_view(), name="fragrance-preference-delete"),
 ]
