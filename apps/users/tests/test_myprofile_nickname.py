@@ -43,7 +43,8 @@ class TestNicknameDuplicateCheckAPI:
     def test_nickname_field_missing(self):
         response = self.client.post(self.url, {})
         assert response.status_code == 400
-        assert "detail" in response.data  # 수정됨
+        assert "nickname" in response.data
+        assert response.data["nickname"][0] == "nickname 필드는 필수입니다."
 
     def test_nickname_too_long(self):
         response = self.client.post(self.url, {"nickname": "111열글자이상닉네임"})

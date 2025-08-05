@@ -60,14 +60,10 @@ class NicknameDuplicateCheckView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        nickname = request.data.get("nickname")
+        serializer = NicknameCheckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if not nickname:
-            return Response({"detail": "nickname 필드는 필수입니다."}, status=400)
-
-        if len(nickname) > 10:
-            return Response({"nickname": ["닉네임은 10자 이하로 입력해주세요."]}, status=400)
-
+        nickname = serializer.validated_data["nickname"]
         is_duplicate = User.objects.filter(nickname=nickname).exclude(id=request.user.id).exists()
 
-        return Response({"is_duplicate": is_duplicate}, status=200)
+        return Response({"is_duplicate": is_duplicate}, status=status.HTTP_200_OK)
