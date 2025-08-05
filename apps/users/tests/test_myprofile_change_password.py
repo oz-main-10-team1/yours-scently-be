@@ -16,6 +16,9 @@ class ChangePasswordTestCase(APITestCase):
         response = self.client.patch(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["message"], "비밀번호가 변경되었습니다.")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(data["new_password"]))
+        self.assertFalse(self.user.check_password("originalpassword"))
 
     def test_passwords_do_not_match(self):
         data = {"new_password": "newsecurepass123", "new_password_confirm": "differentpass123"}
