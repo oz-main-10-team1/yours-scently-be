@@ -29,3 +29,21 @@ class MyProfileUpdateSerializer(serializers.ModelSerializer):
             "nickname": {"required": False},
             "phone_number": {"required": False},
         }
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True, required=True)
+    new_password_confirm = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        if data["new_password"] != data["new_password_confirm"]:
+            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
+
+        if len(data["new_password"]) < 8:
+            raise serializers.ValidationError("비밀번호는 8자 이상이어야 합니다.")
+
+        user = self.context["request"].user
+        if user.check_password(data["new_password"]):
+            raise serializers.ValidationError("기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.")
+
+        return data
