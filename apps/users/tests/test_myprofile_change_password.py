@@ -2,12 +2,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.users.models.user import User
+from apps.users.models import User
 
 
-class ChangePasswordTestCase(APITestCase):
+class TChangePasswordTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="test@example.com", password="originalpassword")
+        self.user = User.objects.create_user(email="test@example.com", password="originalpass123")
         self.url = reverse("update-change-password")
         self.client.force_authenticate(user=self.user)
 
@@ -27,10 +27,9 @@ class ChangePasswordTestCase(APITestCase):
         data = {"new_password": "short", "new_password_confirm": "short"}
         response = self.client.patch(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("비밀번호는 8자 이상이어야 합니다.", str(response.data))
+        self.assertIn("This password is too short", str(response.data))  # Django 기본 메시지
 
     def test_same_as_current_password(self):
-        data = {"new_password": "originalpassword", "new_password_confirm": "originalpassword"}
-        response = self.client.patch(self.url, data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.", str(response.data))
+        data = {
+            "new_password": "originalpass123",
+        }

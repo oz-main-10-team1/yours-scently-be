@@ -49,6 +49,8 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"new_password": list(e.messages)})
 
         if user.check_password(data["new_password"]):
-            raise serializers.ValidationError({"new_password": ["기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."]})
+            raise serializers.ValidationError(
+                {"new_password": ["기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."]}
+            )
 
         return data
