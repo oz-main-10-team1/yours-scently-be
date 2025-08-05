@@ -62,7 +62,7 @@ urlpatterns = [
     # 내 정보 수정 - 비밀번호 변경
     path("users/me/update/password/", ChangePasswordView.as_view(), name="update-change-password"),
     # 내 정보 수정 - 닉네임 중복 확인
-    path("users/check-nickname/", NicknameDuplicateCheckView.as_view(), name="update-check-nickname"),
+    path("users/me/check-nickname/", NicknameDuplicateCheckView.as_view(), name="update-check-nickname"),
     # 계정 찾기
     path("account/find-email/", EmailFindView.as_view(), name="email-find"),
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
