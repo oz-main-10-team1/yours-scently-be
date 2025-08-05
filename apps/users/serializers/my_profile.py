@@ -1,3 +1,5 @@
+from django.contrib.auth import password_validation
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from apps.users.models import User
@@ -38,13 +40,15 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data["new_password"] != data["new_password_confirm"]:
-            raise serializers.ValidationError("비밀번호가 일치하지 않습니다.")
-
-        if len(data["new_password"]) < 8:
-            raise serializers.ValidationError("비밀번호는 8자 이상이어야 합니다.")
+            raise serializers.ValidationError({"new_password_confirm": ["비밀번호가 일치하지 않습니다."]})
 
         user = self.context["request"].user
+        try:
+            password_validation.validate_password(data["new_password"], user=user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)})
+
         if user.check_password(data["new_password"]):
-            raise serializers.ValidationError("기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.")
+            raise serializers.ValidationError({"new_password": ["기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."]})
 
         return data
