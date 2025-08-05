@@ -27,7 +27,7 @@ class ChangePasswordTestCase(APITestCase):
         data = {"new_password": "short", "new_password_confirm": "short"}
         response = self.client.patch(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("비밀번호는 8자 이상이어야 합니다.", str(response.data))
+        self.assertIn("This password is too short", str(response.data))
 
     def test_same_as_current_password(self):
         data = {"new_password": "originalpassword", "new_password_confirm": "originalpassword"}
