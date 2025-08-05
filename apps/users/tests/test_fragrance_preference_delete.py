@@ -74,7 +74,8 @@ class TestDeleteFragrancePreference:
         )
         FragrancePreference.objects.create(user=other, intensity="eau_de_parfum")
 
-        response = auth_client.delete(reverse("fragrance-preference-delete"))
+        url = reverse("fragrance-preference-delete")
+        response = auth_client.delete(url)
 
         assert response.status_code in [403, 404]
 
