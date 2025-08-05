@@ -37,6 +37,10 @@ from apps.users.views.my_profile import (
     MyProfileView,
     NicknameDuplicateCheckView,
 )
+from apps.users.views.fragrance.fragrance_preference_update import (
+    FragrancePreferenceUpdateView,
+)
+from apps.users.views.my_profile import MyProfileUpdateView, MyProfileView
 from apps.users.views.withdrawal import WithdrawalAPIView
 
 urlpatterns = [
@@ -76,4 +80,8 @@ urlpatterns = [
     path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
     # 사용자 취향 삭제
     path("user/fragrance-preference", FragrancePreferenceDeleteView.as_view(), name="fragrance-preference-delete"),
+    # 사용자 취향 수정
+    path(
+        "user/fragrance-preference/update", FragrancePreferenceUpdateView.as_view(), name="fragrance-preference-update"
+    ),
 ]
