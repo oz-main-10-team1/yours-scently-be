@@ -54,3 +54,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             )
 
         return data
+
+
+class NicknameCheckSerializer(serializers.Serializer):
+    nickname = serializers.CharField(required=True)

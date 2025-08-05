@@ -3,10 +3,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.users.models import User
 from apps.users.serializers.my_profile import (
     ChangePasswordSerializer,
     MyProfileSerializer,
     MyProfileUpdateSerializer,
+    NicknameCheckSerializer,
 )
 
 
@@ -52,3 +54,20 @@ class ChangePasswordView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class NicknameDuplicateCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        nickname = request.data.get("nickname")
+
+        if not nickname:
+            return Response({"detail": "nickname 필드는 필수입니다."}, status=400)
+
+        if len(nickname) > 10:
+            return Response({"nickname": ["닉네임은 10자 이하로 입력해주세요."]}, status=400)
+
+        is_duplicate = User.objects.filter(nickname=nickname).exclude(id=request.user.id).exists()
+
+        return Response({"is_duplicate": is_duplicate}, status=200)
