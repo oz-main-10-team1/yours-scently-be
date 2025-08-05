@@ -54,3 +54,15 @@ class ChangePasswordSerializer(serializers.Serializer):
             )
 
         return data
+
+
+# 닉네임 길이 제한
+class NicknameCheckSerializer(serializers.Serializer):
+    nickname = serializers.CharField(
+        max_length=10,
+        required=True,
+        error_messages={
+            "required": "nickname 필드는 필수입니다.",
+            "max_length": "닉네임은 10자 이하로 입력해주세요.",
+        },
+    )

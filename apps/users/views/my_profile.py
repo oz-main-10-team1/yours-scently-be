@@ -3,10 +3,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.users.models import User
 from apps.users.serializers.my_profile import (
     ChangePasswordSerializer,
     MyProfileSerializer,
     MyProfileUpdateSerializer,
+    NicknameCheckSerializer,
 )
 
 
@@ -52,3 +54,16 @@ class ChangePasswordView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class NicknameDuplicateCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = NicknameCheckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        nickname = serializer.validated_data["nickname"]
+        is_duplicate = User.objects.filter(nickname=nickname).exclude(id=request.user.id).exists()
+
+        return Response({"is_duplicate": is_duplicate}, status=status.HTTP_200_OK)
