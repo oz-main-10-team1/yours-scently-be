@@ -31,6 +31,7 @@ class MyProfileUpdateSerializer(serializers.ModelSerializer):
         }
 
 
+# 내정보 수정 - 비밀번호 변경
 class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True, required=True)
     new_password_confirm = serializers.CharField(write_only=True, required=True)
