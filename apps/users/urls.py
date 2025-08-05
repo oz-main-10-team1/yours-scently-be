@@ -66,9 +66,5 @@ urlpatterns = [
     # 사용자 취향 등록
     path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
     # 사용자 취향 삭제
-    path(
-        "user/<int:user_id>/fragrance-preference",
-        FragrancePreferenceDeleteView.as_view(),
-        name="fragrance-preference-delete",
-    ),
+    path("user/fragrance-preference", FragrancePreferenceDeleteView.as_view(), name="fragrance-preference-delete"),
 ]

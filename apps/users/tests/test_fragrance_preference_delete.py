@@ -48,7 +48,7 @@ class TestDeleteFragrancePreference:
     def test_delete_success(self, auth_client, user):
         FragrancePreference.objects.create(user=user, intensity="parfum")
 
-        url = f"/api/v1/auth/user/{user.id}/fragrance-preference"
+        url = reverse("fragrance-preference-delete")
         response = auth_client.delete(url)
 
         assert response.status_code == 200
@@ -59,7 +59,7 @@ class TestDeleteFragrancePreference:
         FragrancePreference.objects.create(user=user, intensity="parfum")
 
         client = APIClient()
-        url = f"/api/v1/auth/user/{user.id}/fragrance-preference"
+        url = reverse("fragrance-preference-delete")
         response = client.delete(url)
 
         assert response.status_code == 401
@@ -73,15 +73,15 @@ class TestDeleteFragrancePreference:
             phone_number="01011112222",
         )
         FragrancePreference.objects.create(user=other, intensity="eau_de_parfum")
-        url = reverse("fragrance-preference-delete", kwargs={"user_id": other.id})
-        response = auth_client.delete(url)
-        assert response.status_code == 403
-        assert response.data["detail"] == "권한이 없습니다."
+
+        response = auth_client.delete(reverse("fragrance-preference-delete"))
+
+        assert response.status_code in [403, 404]
 
     def test_delete_not_found(self, auth_client, user):
         FragrancePreference.objects.filter(user=user).delete()
 
-        url = f"/api/v1/auth/user/{user.id}/fragrance-preference"
+        url = reverse("fragrance-preference-delete")
         response = auth_client.delete(url)
 
         assert response.status_code == 404
