@@ -26,13 +26,7 @@ from apps.users.views.find_account_views import (
     PasswordResetVerifyCodeView,
 )
 from apps.users.views.fragrance.fragrance_preference import (
-    FragrancePreferenceCreateView,
-)
-from apps.users.views.fragrance.fragrance_preference_delete import (
-    FragrancePreferenceDeleteView,
-)
-from apps.users.views.fragrance.fragrance_preference_update import (
-    FragrancePreferenceUpdateView,
+    FragrancePreferenceView,
 )
 from apps.users.views.my_profile import (
     ChangePasswordView,
@@ -79,9 +73,7 @@ urlpatterns = [
     path("find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
     path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     # 사용자 취향
-    path("user/preference/", FragrancePreferenceCreateView.as_view(), name="create-fragrance-preference"),
-    path("user/fragrance-preference", FragrancePreferenceDeleteView.as_view(), name="fragrance-preference-delete"),
-    path(
-        "user/fragrance-preference/update", FragrancePreferenceUpdateView.as_view(), name="fragrance-preference-update"
-    ),
+    path("fragrance-preference/", FragrancePreferenceView.as_view(), name="create-fragrance-preference"),
+    path("fragrance-preference/", FragrancePreferenceView.as_view(), name="fragrance-preference-update"),
+    path("fragrance-preference/", FragrancePreferenceView.as_view(), name="fragrance-preference-delete"),
 ]
