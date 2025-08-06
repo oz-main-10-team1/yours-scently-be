@@ -74,26 +74,31 @@ class TestFragrancePreference:
 
     # --- POST ---
     def test_create_success(self, auth_client, fragrance_payload):
-        url = reverse("create-fragrance-preference")
+        url = reverse("fragrance-preference")
         res = auth_client.post(url, data=fragrance_payload, format="json")
         assert res.status_code == 201
+        data = res.json()
+        assert data["intensity"] == fragrance_payload["intensity"]
+        assert set(data["top_notes"]) == set(fragrance_payload["preferred_top_notes"])
+        assert set(data["middle_notes"]) == set(fragrance_payload["preferred_middle_notes"])
+        assert set(data["base_notes"]) == set(fragrance_payload["preferred_base_notes"])
 
     def test_create_duplicate(self, auth_client, fragrance_payload):
-        url = reverse("create-fragrance-preference")
+        url = reverse("fragrance-preference")
         auth_client.post(url, data=fragrance_payload, format="json")
         res = auth_client.post(url, data=fragrance_payload, format="json")
         assert res.status_code == 400
         assert "이미 등록된 향기 취향이 존재합니다." in res.json()["detail"]
 
     def test_create_unauthorized(self, fragrance_payload):
-        url = reverse("create-fragrance-preference")
+        url = reverse("fragrance-preference")
         client = APIClient()
         res = client.post(url, data=fragrance_payload, format="json")
         assert res.status_code == 401
 
     # --- PATCH ---
     def test_update_success(self, auth_client, preference):
-        url = reverse("fragrance-preference-update")
+        url = reverse("fragrance-preference")
         res = auth_client.patch(
             url, data={"intensity": "eau_de_parfum", "preferences": {"daytime_use": True}}, format="json"
         )
@@ -102,31 +107,32 @@ class TestFragrancePreference:
 
     def test_update_not_found(self, auth_client, user):
         FragrancePreference.objects.filter(user=user).delete()
-        url = reverse("fragrance-preference-update")
+        url = reverse("fragrance-preference")
         res = auth_client.patch(url, data={"intensity": "eau_de_parfum"}, format="json")
         assert res.status_code == 404
 
     def test_update_unauthorized(self, preference):
-        url = reverse("fragrance-preference-update")
+        url = reverse("fragrance-preference")
         client = APIClient()
         res = client.patch(url, data={"intensity": "eau_de_parfum"}, format="json")
         assert res.status_code == 401
 
     # --- DELETE ---
     def test_delete_success(self, auth_client, preference):
-        url = reverse("fragrance-preference-delete")
+        url = reverse("fragrance-preference")
         res = auth_client.delete(url)
         assert res.status_code == 200
         assert res.json()["message"] == "사용자 향기 취향이 성공적으로 삭제되었습니다."
+        assert not FragrancePreference.objects.filter(user=preference.user).exists()
 
     def test_delete_not_found(self, auth_client, user):
         FragrancePreference.objects.filter(user=user).delete()
-        url = reverse("fragrance-preference-delete")
+        url = reverse("fragrance-preference")
         res = auth_client.delete(url)
         assert res.status_code == 404
 
     def test_delete_unauthorized(self, preference):
-        url = reverse("fragrance-preference-delete")
+        url = reverse("fragrance-preference")
         client = APIClient()
         res = client.delete(url)
         assert res.status_code == 401

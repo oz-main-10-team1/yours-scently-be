@@ -55,8 +55,8 @@ class FragrancePreferenceView(APIView):
 
     # DELETE: 향기 취향 삭제
     @extend_schema(
-        request=FragrancePreferenceSerializer,
-        responses=FragrancePreferenceSerializer,
+        request=None,
+        responses={200: {"type": "object", "properties": {"message": {"type": "string"}}}},
         tags=["fragrance-preference"],
         summary="사용자 취향 삭제",
     )
