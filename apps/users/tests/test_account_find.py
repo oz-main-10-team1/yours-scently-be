@@ -7,7 +7,6 @@ from rest_framework.test import APIClient
 from apps.users.models import User
 from apps.users.models.social_user import SocialUser
 from apps.users.utils.redis_utils import (
-    mark_email_find_phone_as_verified,
     mark_reset_email_as_verified,
     store_reset_email_code,
 )
@@ -27,14 +26,8 @@ def test_user() -> User:
     )
 
 
-@pytest.fixture
-def verified_phone(monkeypatch):
-    monkeypatch.setattr("apps.users.utils.redis_utils.is_email_find_phone_verified", lambda phone: True)
-
-
 # 이메일 찾기 테스트
-def test_email_find_success(api_client: APIClient, test_user: User, verified_phone) -> None:
-    mark_email_find_phone_as_verified(test_user.phone_number)
+def test_email_find_success(api_client: APIClient, test_user: User) -> None:
     url = reverse("email-find")
     response = api_client.post(url, data={"name": test_user.name, "phone_number": test_user.phone_number})
     assert response.status_code == status.HTTP_200_OK
@@ -42,21 +35,11 @@ def test_email_find_success(api_client: APIClient, test_user: User, verified_pho
     assert response.data["email"].startswith("t")
 
 
-def test_email_find_not_found(api_client: APIClient, verified_phone) -> None:
-    fake_phone = "01000000000"
-    mark_email_find_phone_as_verified(fake_phone)
+def test_email_find_not_found(api_client: APIClient) -> None:
     url = reverse("email-find")
     response = api_client.post(url, data={"name": "존재하지않는", "phone_number": "01000000000"})
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert "message" in response.data
-
-
-def test_email_find_without_phone_verification(api_client: APIClient, test_user: User, monkeypatch) -> None:
-    monkeypatch.setattr("apps.users.views.find_account_views.is_email_find_phone_verified", lambda _: False)
-    url = reverse("email-find")
-    response = api_client.post(url, data={"name": test_user.name, "phone_number": test_user.phone_number})
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.data["message"] == "휴대폰 인증을 먼저 완료해주세요."
 
 
 # 비밀번호 재설정 - 이메일 인증코드 발송

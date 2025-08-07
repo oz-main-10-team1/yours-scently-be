@@ -19,8 +19,6 @@ from apps.users.tasks import send_verification_email_task
 from apps.users.utils.email_masking_utils import mask_email
 from apps.users.utils.redis_utils import (
     get_reset_email_code,
-    is_email_find_phone_verified,
-    is_phone_verified,
     is_reset_email_verified,
     mark_reset_email_as_verified,
     store_reset_email_code,
@@ -35,7 +33,7 @@ class EmailFindView(APIView):
     @extend_schema(
         request=EmailFindRequestSerializer,
         responses={status.HTTP_200_OK: EmailFindResponseSerializer},
-        description="이메일 찾기 API - 이름과 휴대폰 번호로 인증 후 마스킹해서 이메일 반환",
+        description="이메일 찾기 API - 이름과 휴대폰 번호로 확인 후 마스킹해서 이메일 반환",
         tags=["account-find"],
     )
     def post(self, request: Request) -> Response:
@@ -44,9 +42,6 @@ class EmailFindView(APIView):
 
         name = serializer.validated_data["name"]
         phone_number = serializer.validated_data["phone_number"]
-
-        if not is_email_find_phone_verified(phone_number):
-            return Response({"message": "휴대폰 인증을 먼저 완료해주세요."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(name=name, phone_number=phone_number)

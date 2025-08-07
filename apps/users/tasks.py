@@ -1,16 +1,16 @@
 import logging
 from datetime import date
 
-from celery import shared_task  # type: ignore
 from django.conf import settings
 from django.core.mail import send_mail
 
 from apps.users.models import User, Withdrawal
+from config.celery import app  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=30)
+@app.task(bind=True, max_retries=3, default_retry_delay=30)
 def send_verification_email_task(self, email: str, code: str) -> None:
     try:
         send_mail(
@@ -26,7 +26,7 @@ def send_verification_email_task(self, email: str, code: str) -> None:
 
 
 # 14일이 지난 계정들 매일 정오에 자동으로 삭제
-@shared_task
+@app.task
 def delete_expired_withdrawn_users():
     today = date.today()
     expired_withdrawals = Withdrawal.objects.filter(due_date__lte=today).select_related("user")

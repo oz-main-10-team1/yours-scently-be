@@ -5,16 +5,8 @@ from apps.users.views.auth.email_auth import (
     VerifyEmailCodeView,
 )
 from apps.users.views.auth.email_login import EmailLoginView
-from apps.users.views.auth.find_email_phone_verification import (
-    EmailFindPhoneSendCodeAPIView,
-    EmailFindPhoneVerifyCodeAPIView,
-)
 from apps.users.views.auth.kakao_social_login import KakaoLoginAPIView
 from apps.users.views.auth.naver_social_login import NaverLoginAPIView
-from apps.users.views.auth.phone_auth import (
-    SendPhoneCodeAPIView,
-    VerifyPhoneCodeAPIView,
-)
 from apps.users.views.auth.signup import (
     SignUpAPIView,
     SignupNicknameCheckAPIView,
@@ -44,9 +36,6 @@ urlpatterns = [
     # 이메일 인증
     path("signup/email/send-code/", SendEmailCodeView.as_view(), name="email-send-code"),
     path("signup/email/verify/", VerifyEmailCodeView.as_view(), name="email-verify"),
-    # 휴대폰 인증
-    path("signup/phone/send-code/", SendPhoneCodeAPIView.as_view(), name="phone-send-code"),
-    path("signup/phone/verify/", VerifyPhoneCodeAPIView.as_view(), name="phone-verify"),
     # 로그인
     path("login/email/", EmailLoginView.as_view(), name="email-login"),
     path("login/kakao/", KakaoLoginAPIView.as_view(), name="kakao-login"),
@@ -68,10 +57,6 @@ urlpatterns = [
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
     path("account/verify-code/", PasswordResetVerifyCodeView.as_view(), name="verify-code"),
     path("account/change-password/", PasswordChangeView.as_view(), name="change-password"),
-    path("account/find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
-    path("account/find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
-    path("find/email/phone/send/", EmailFindPhoneSendCodeAPIView.as_view(), name="email-find-phone-send"),
-    path("find/email/phone/verify/", EmailFindPhoneVerifyCodeAPIView.as_view(), name="email-find-phone-verify"),
     # 사용자 취향
     path("fragrance-preference/", FragrancePreferenceView.as_view(), name="fragrance-preference"),
 ]
