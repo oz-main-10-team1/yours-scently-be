@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from apps.users.utils.redis_utils import is_phone_verified, is_signup_email_verified
+from apps.users.utils.redis_utils import is_signup_email_verified
 
 client = APIClient()
 
@@ -35,42 +35,18 @@ def test_email_send_and_verify(mock_send_email_task):
 
 
 @pytest.mark.django_db
-@patch("apps.users.views.auth.phone_auth.send_sms_verification_code")
-@patch("apps.users.serializers.auth.phone_auth.check_verification_code")
-def test_phone_send_and_verify(mock_check_code, mock_send_sms, client):
-    phone = "01058249190"
-    normalized = "+821058249190"
-
-    mock_send_sms.return_value = None
-    mock_check_code.return_value = "approved"
-
-    response = client.post(reverse("phone-send-code"), {"phone": phone})
-    assert response.status_code == 200
-    mock_send_sms.assert_called_once()
-
-    response = client.post(reverse("phone-verify"), {"phone": phone, "code": "123456"})
-    assert response.status_code == 200
-    assert is_phone_verified(normalized)
-
-
-@pytest.mark.django_db
-def test_signup_after_email_and_phone_verification():
+def test_signup_after_email_verification():
     email = "signup@example.com"
     phone = "01058249190"
-    normalized_phone = "+821058249190"
 
     from apps.users.utils.redis_utils import (
-        is_phone_verified,
         is_signup_email_verified,
-        mark_phone_verified,
         mark_signup_email_as_verified,
     )
 
     mark_signup_email_as_verified(email)
-    mark_phone_verified(normalized_phone)
 
     assert is_signup_email_verified(email) is True
-    assert is_phone_verified(normalized_phone) is True
 
     payload = {
         "email": email,

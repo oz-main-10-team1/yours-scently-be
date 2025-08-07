@@ -175,21 +175,14 @@ SPECTACULAR_SETTINGS = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# < Twilio 설정 >
-TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER")
-TWILIO_VERIFY_SERVICE_SID = os.getenv("TWILIO_VERIFY_SERVICE_SID")
-
-
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
 # < 이메일 설정 >
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")

@@ -7,7 +7,6 @@ from rest_framework import serializers
 
 from apps.users.models import User
 from apps.users.utils.redis_utils import (
-    is_phone_verified,
     is_signup_email_verified,
 )
 
@@ -63,9 +62,6 @@ class SignUpSerializer(serializers.ModelSerializer[Any]):
 
         if User.objects.filter(phone_number=normalized).exists():
             raise serializers.ValidationError("이미 존재하는 휴대폰 번호입니다.")
-
-        if not is_phone_verified(normalized):
-            raise serializers.ValidationError("휴대폰 인증이 완료되지 않았습니다.")
 
         return normalized
 

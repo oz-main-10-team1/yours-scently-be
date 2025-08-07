@@ -1,7 +1,5 @@
 from django_redis import get_redis_connection  # type: ignore
 
-from apps.users.utils.twilio_utils import normalize_phone_number
-
 # 회원가입 용 redis 함수
 
 
@@ -36,18 +34,6 @@ def delete_signup_email_code(email: str) -> None:
     redis.delete(f"signup:email:{email}")
 
 
-# 휴대폰 인증 완료 표시 (기본 TTL 5분)
-def mark_phone_verified(phone: str, ttl: int = 300) -> None:
-    redis = get_redis_connection("default")
-    redis.set(f"signup:phone:verified:{phone}", "true", ex=ttl)
-
-
-def is_phone_verified(phone: str) -> bool:
-    redis = get_redis_connection("default")
-    normalized = normalize_phone_number(phone)
-    return redis.get(f"signup:phone:verified:{normalized}") == b"true"
-
-
 # 비밀번호 찾기용
 
 
@@ -80,16 +66,3 @@ def is_reset_email_verified(email: str) -> bool:
 def delete_reset_email_code(email: str) -> None:
     redis = get_redis_connection("default")
     redis.delete(f"reset:email:{email}")
-
-
-# 이메일 찾기 위한 휴대폰 인증
-# 휴대폰 인증 완료 표시 (기본 TTL 5분)
-def mark_email_find_phone_as_verified(phone: str, ttl: int = 300) -> None:
-    redis = get_redis_connection("default")
-    redis.set(f"email_find:verified:{phone}", "true", ex=ttl)
-
-
-# 휴대폰 인증 여부 확인
-def is_email_find_phone_verified(phone: str) -> bool:
-    redis = get_redis_connection("default")
-    return redis.get(f"email_find:verified:{phone}") == b"true"
