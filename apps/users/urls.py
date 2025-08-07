@@ -5,10 +5,8 @@ from apps.users.views.auth.email_auth import (
     VerifyEmailCodeView,
 )
 from apps.users.views.auth.email_login import EmailLoginView
-
 from apps.users.views.auth.kakao_social_login import KakaoLoginAPIView
 from apps.users.views.auth.naver_social_login import NaverLoginAPIView
-
 from apps.users.views.auth.signup import (
     SignUpAPIView,
     SignupNicknameCheckAPIView,

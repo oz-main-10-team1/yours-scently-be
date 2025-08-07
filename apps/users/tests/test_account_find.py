@@ -41,6 +41,7 @@ def test_email_find_not_found(api_client: APIClient) -> None:
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert "message" in response.data
 
+
 # 비밀번호 재설정 - 이메일 인증코드 발송
 def test_password_reset_email_send(api_client: APIClient, test_user: User, monkeypatch) -> None:
     monkeypatch.setattr("apps.users.tasks.send_verification_email_task.delay", lambda email, code: None)
