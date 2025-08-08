@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from apps.product.models import Product
+from apps.product.models import Perfume, Product
 from apps.product.models.like import Like
 from apps.users.models import User
 
@@ -13,10 +13,21 @@ def user(db):
 
 
 @pytest.fixture
-def product(db):
-    return Product.objects.create(
+def perfume(db):
+    return Perfume.objects.create(
         name="테스트향수",
         brand="테스트브랜드",
+        release_year=2024,
+        intensity="eau_de_parfum",
+    )
+
+
+@pytest.fixture
+def product(db, perfume):
+    return Product.objects.create(
+        name="테스트향수",
+        perfume=perfume,
+        volume_ml=50,
         description="은은하고 부드러운 향",
         category=Product.Category.DAILY,
         price=19900,
