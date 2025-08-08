@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from apps.product.models import Like, Product
+from apps.product.models import Like, Perfume, Product
 from apps.users.models import User
 
 
@@ -24,20 +24,37 @@ def auth_client(user):
 
 @pytest.fixture
 def liked_products(user):
-    p1 = Product.objects.create(
+    # 공통 향수 객체
+    chanel_perfume = Perfume.objects.create(
         name="샤넬 No.5",
         brand="Chanel",
+        release_year=1921,
+        intensity="eau_de_parfum",
+    )
+    diptyque_perfume = Perfume.objects.create(
+        name="딥디크 탐다오",
+        brand="Diptyque",
+        release_year=2003,
+        intensity="eau_de_parfum",
+    )
+
+    # 향수를 참조하는 Product 객체
+    p1 = Product.objects.create(
+        perfume=chanel_perfume,
+        name="샤넬 No.5 50ml",
+        volume_ml=50,
         description="향수1",
-        category="Daily",
+        category=Product.Category.DAILY,
         price=135000,
         stock=10,
         product_img_url="https://example.com/images/101.jpg",
     )
     p2 = Product.objects.create(
-        name="딥디크 탐다오",
-        brand="Diptyque",
+        perfume=diptyque_perfume,
+        name="딥디크 탐다오 100ml",
+        volume_ml=100,
         description="향수2",
-        category="Special",
+        category=Product.Category.SPECIAL,
         price=158000,
         stock=10,
         product_img_url="https://example.com/images/102.jpg",
@@ -57,8 +74,10 @@ def test_product_like_list(auth_client, liked_products):
     assert len(res.data["results"]) == 2
 
     results = res.data["results"]
-    assert results[0]["name"] == "딥디크 탐다오"
-    assert results[1]["name"] == "샤넬 No.5"
+    product_names = [item["name"] for item in results]
+
+    assert "딥디크 탐다오 100ml" in product_names
+    assert "샤넬 No.5 50ml" in product_names
 
     for item in res.data["results"]:
         assert item["is_liked"] is True

@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.product.models import Product
+from apps.product.models import Perfume, Product
 from apps.review.models import Review
 
 User = get_user_model()
@@ -39,14 +39,26 @@ def auth_client(user):
 
 
 @pytest.fixture
-def product(db):
+def perfume(db):
+    return Perfume.objects.create(
+        name="테스트 퍼퓸",
+        brand="브랜드",
+        release_year=2023,
+        intensity=Perfume.IntensityChoices.EAU_DE_PARFUM,
+    )
+
+
+@pytest.fixture
+def product(db, perfume):
     return Product.objects.create(
         name="테스트 향수",
-        brand="브랜드",
+        perfume=perfume,
+        volume_ml=50,
         description="테스트 설명",
-        category="DAILY",
+        category=Product.Category.DAILY,
         price=50000,
         stock=10,
+        product_img_url="https://example.com/img.jpg",
     )
 
 
