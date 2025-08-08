@@ -136,7 +136,7 @@ REST_FRAMEWORK = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -175,8 +175,8 @@ SPECTACULAR_SETTINGS = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
