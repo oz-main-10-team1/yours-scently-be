@@ -3,17 +3,19 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
+
 def assign_default_perfume_to_null_products(apps, schema_editor):
-    Product = apps.get_model('product', 'Product')
-    Perfume = apps.get_model('product', 'Perfume')
+    Product = apps.get_model("product", "Product")
+    Perfume = apps.get_model("product", "Perfume")
 
     default_perfume, _ = Perfume.objects.get_or_create(
-        name='기본향수',
-        brand='DefaultBrand',
+        name="기본향수",
+        brand="DefaultBrand",
         release_year=2025,
-        intensity='eau_de_parfum',
+        intensity="eau_de_parfum",
     )
     Product.objects.filter(perfume__isnull=True).update(perfume=default_perfume)
+
 
 class Migration(migrations.Migration):
 

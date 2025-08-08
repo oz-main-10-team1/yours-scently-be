@@ -19,7 +19,7 @@ class Product(models.Model):
     )
     volume_ml = models.PositiveIntegerField(default=50)
 
-    name = models.CharField(max_length=100) #샤넬 100ml
+    name = models.CharField(max_length=100)  # 샤넬 100ml
     description = models.TextField()
     category = models.CharField(choices=Category.choices, max_length=10)
     price = models.DecimalField(decimal_places=2, max_digits=10)
