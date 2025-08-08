@@ -1,7 +1,8 @@
 import pytest
+
+from apps.product.models.perfume import Perfume
 from apps.users.models import User
 from apps.users.serializers.my_page import MyPageSerializer, MyPerfumeSerializer
-from apps.product.models.perfume import Perfume
 
 
 @pytest.mark.django_db

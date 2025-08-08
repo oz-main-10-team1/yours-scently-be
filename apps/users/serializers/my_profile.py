@@ -67,4 +67,3 @@ class NicknameCheckSerializer(serializers.Serializer):
             "max_length": "닉네임은 10자 이하로 입력해주세요.",
         },
     )
-

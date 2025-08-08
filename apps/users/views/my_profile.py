@@ -68,5 +68,3 @@ class NicknameDuplicateCheckView(APIView):
         is_duplicate = User.objects.filter(nickname=nickname).exclude(id=request.user.id).exists()
 
         return Response({"is_duplicate": is_duplicate}, status=status.HTTP_200_OK)
-
-
