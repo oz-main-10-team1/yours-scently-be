@@ -1,0 +1,36 @@
+from rest_framework import serializers
+
+from apps.product.models.perfume import Perfume
+from apps.users.models.user import User
+
+
+class MyPerfumeSerializer(serializers.ModelSerializer):
+    main_accords = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Perfume
+        fields = [
+            "id",
+            "name",
+            "brand",
+            "main_accords",
+            "intensity",
+        ]
+
+
+class MyPageSerializer(serializers.ModelSerializer):
+    # ✅ 실제 User 모델에 연결된 필드명 사용 (예: perfumes)
+    perfumes = MyPerfumeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "nickname",
+            "phone_number",
+            "birth_date",
+            "gender",
+            "created_at",
+            "perfumes",
+        ]

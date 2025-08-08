@@ -1,4 +1,4 @@
-from .accord import Accord
+from .accord import Accord, MainAccord
 from .like import Like
 from .note import Note
 from .perfume import Perfume
@@ -12,4 +12,5 @@ __all__ = [
     "Perfume",
     "Product",
     "UsageHistory",
+    "MainAccord",
 ]

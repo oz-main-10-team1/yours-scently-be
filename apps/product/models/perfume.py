@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.product.models import Accord, Note
+from apps.product.models import Accord, MainAccord, Note
 
 
 class Perfume(models.Model):
@@ -19,11 +19,13 @@ class Perfume(models.Model):
         max_length=20, choices=IntensityChoices.choices, default=IntensityChoices.EAU_DE_PARFUM
     )
 
+    users = models.ManyToManyField("users.User", related_name="perfumes")
+
     top_notes = models.ManyToManyField(Note, related_name="top_perfumes", limit_choices_to={"type": "top"})
     middle_notes = models.ManyToManyField(Note, related_name="middle_perfumes", limit_choices_to={"type": "middle"})
     base_notes = models.ManyToManyField(Note, related_name="base_perfumes", limit_choices_to={"type": "base"})
 
-    main_accords = models.ManyToManyField(Accord, related_name="perfumes")
+    main_accords = models.ManyToManyField(MainAccord, related_name="perfumes")
 
     def __str__(self):
         return f"{self.brand or ''} - {self.name or ''}"
