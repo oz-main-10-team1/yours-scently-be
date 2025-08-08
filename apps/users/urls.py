@@ -22,11 +22,11 @@ from apps.users.views.fragrance.fragrance_preference import (
 )
 from apps.users.views.my_profile import (
     ChangePasswordView,
-    ChangePhoneWithCodeAPIView,
     MyProfileUpdateView,
     MyProfileView,
     NicknameDuplicateCheckView,
 )
+from apps.users.views.my_page import MyPageView
 from apps.users.views.withdrawal import WithdrawalAPIView
 
 urlpatterns = [
@@ -50,8 +50,8 @@ urlpatterns = [
     path("users/me/update/password/", ChangePasswordView.as_view(), name="update-change-password"),
     # 내 정보 수정 - 닉네임 중복 확인
     path("users/me/check-nickname/", NicknameDuplicateCheckView.as_view(), name="update-check-nickname"),
-    # 내 정보 수정 - 핸드폰 인증 후 완료 시 변경
-    path("users/me/change-phone/", ChangePhoneWithCodeAPIView.as_view(), name="change-phone"),
+    # 마이페이지 조회
+    path('user/mypage/', MyPageView.as_view(), name='mypage'),
     # 계정 찾기
     path("account/find-email/", EmailFindView.as_view(), name="email-find"),
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
