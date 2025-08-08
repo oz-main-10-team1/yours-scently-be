@@ -1,4 +1,3 @@
-from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import CreateAPIView
@@ -12,12 +11,6 @@ class ReviewCreateAPIView(CreateAPIView):
     serializer_class = ReviewCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(
-        request=ReviewCreateSerializer,
-        responses=ReviewCreateSerializer,
-        tags=["review"],
-        summary="향수 리뷰 등록",
-    )
     def create(self, request, *args, **kwargs):
         product_id = kwargs.get("product_id")
 
@@ -26,7 +19,8 @@ class ReviewCreateAPIView(CreateAPIView):
         except Product.DoesNotExist:
             raise NotFound("해당 향수 상품을 찾을 수 없습니다.")
 
-        serializer = self.get_serializer(data=request.data, context={"request": request, "product": product})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        serializer.save(user=request.user, product=product)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
