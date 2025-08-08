@@ -27,6 +27,27 @@ services:
       redis:
         condition: service_healthy
 
+  celery:
+    container_name: celery
+    image: yours_scently-django:latest
+    env_file:
+      - envs/.local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+
+    working_dir: /yours_scently
+    command: >
+      bash -c "poetry run celery -A config worker -l info"
+
+    depends_on:
+      django:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+    networks:
+      - ws
+
   nginx:
     image: nginx:latest
     container_name: nginx
