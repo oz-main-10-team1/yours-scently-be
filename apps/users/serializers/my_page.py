@@ -5,10 +5,12 @@ from apps.users.models.user import User
 
 
 class MyPerfumeSerializer(serializers.ModelSerializer):
+    main_accords = serializers.StringRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Perfume
         fields = [
-            "id",  # perfume_id
+            "id",
             "name",
             "brand",
             "main_accords",
