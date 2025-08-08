@@ -43,8 +43,9 @@ class ProductBannerByCategoryView(APIView):
 
         selected = (
             Product.objects.filter(category=category)
+            .select_related("perfume")
             .order_by("?")
-            .only("id", "name", "brand", "price", "product_img_url")[:5]
+            .only("id", "name", "perfume__brand", "price", "product_img_url")[:5]
         )
         serializer = ProductBannerByCategorySerializer(selected, many=True)
         response_data = serializer.data

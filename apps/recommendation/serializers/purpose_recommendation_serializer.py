@@ -4,6 +4,8 @@ from apps.product.models import Product
 
 
 class ProductBannerByCategorySerializer(serializers.ModelSerializer):
+    brand = serializers.CharField(source="perfume.brand", read_only=True)
+
     class Meta:
         model = Product
         fields = [

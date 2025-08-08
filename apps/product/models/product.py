@@ -10,8 +10,16 @@ class Product(models.Model):
         RELAX = "Relax", "휴식 및 기분전환"
         OUTDOOR = "Outdoor", "운동 및 야외 활동"
 
-    name = models.CharField(max_length=50)
-    brand = models.CharField(max_length=50)
+    perfume = models.ForeignKey(
+        Perfume,
+        on_delete=models.CASCADE,
+        related_name="products",
+        null=False,
+        blank=False,
+    )
+    volume_ml = models.PositiveIntegerField(default=50)
+
+    name = models.CharField(max_length=100)  # 샤넬 100ml
     description = models.TextField()
     category = models.CharField(choices=Category.choices, max_length=10)
     price = models.DecimalField(decimal_places=2, max_digits=10)
@@ -19,9 +27,6 @@ class Product(models.Model):
     product_img_url = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     views_count = models.PositiveIntegerField(default=0)
-
-    # 펄퓸이랑 1:1 관계 연결
-    perfume = models.OneToOneField(Perfume, on_delete=models.CASCADE, related_name="product", null=True, blank=True)
 
     class Meta:
         db_table = "product"

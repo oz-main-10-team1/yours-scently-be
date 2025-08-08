@@ -6,21 +6,12 @@ from apps.product.models import Product
 from apps.product.serializers.product_serializers import ProductSerializer
 
 
-# ---
-# 무한 스크롤을 위한 커스텀 페이지네이션 클래스
-# ---
 class CustomPagination(pagination.LimitOffsetPagination):
-    # 한 페이지에 보여줄 기본 항목 수
     default_limit = 10
-    # 클라이언트가 페이지당 항목 수를 지정할 때 사용하는 파라미터 이름
     limit_query_param = "limit"
-    # 클라이언트가 요청할 수 있는 최대 항목 수
     max_limit = 100
 
     def get_paginated_response(self, data):
-        """
-        페이지네이션된 응답 형식을 정의합니다.
-        """
         return Response(
             {
                 "next": self.get_next_link(),
@@ -31,18 +22,12 @@ class CustomPagination(pagination.LimitOffsetPagination):
         )
 
 
-# ---
-# 상품 목록을 정렬 및 무한 스크롤로 보여주는 API View
-# ---
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related("perfume").all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        """
-        클라이언트의 'order_by' 쿼리 파라미터에 따라 쿼리셋을 필터링하고 정렬합니다.
-        """
         queryset = super().get_queryset()
         order_by = self.request.query_params.get("order_by", "latest")
 

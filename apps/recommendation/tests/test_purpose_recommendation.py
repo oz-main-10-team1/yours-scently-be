@@ -3,18 +3,27 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.product.models import Product
+from apps.product.models import Perfume, Product
 
 
 @pytest.mark.django_db
 class TestProductBannerByCategory:
     @pytest.fixture
     def sample_products(self):
+        # 공통 향수 생성
+        perfume = Perfume.objects.create(
+            name="테스트 향수",
+            brand="테스트 브랜드",
+            release_year=2022,
+            intensity="eau_de_parfum",
+        )
+
         return Product.objects.bulk_create(
             [
                 Product(
+                    perfume=perfume,
                     name=f"운동향수 {i}",
-                    brand="테스트브랜드",
+                    volume_ml=50,
                     description="설명입니다.",
                     category=Product.Category.OUTDOOR,
                     price=10000 + i * 1000,
