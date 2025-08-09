@@ -21,37 +21,23 @@ class RecommendationCreateView(APIView):
         if not user_input:
             return Response({"detail": "text 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Clova 호출 → 향수 ID, 키워드, description, reason 수신
+        # Clova 호출 → keywords, description, reason 수신 (ID 제외)
         clova_response = call_clova_model(user_input)
-        perfume_ids: List[int] = clova_response.get("perfume_ids", []) or []
         keywords: List[str] = clova_response.get("keywords", []) or []
         description: str = clova_response.get("description", "") or ""
         reason: str = clova_response.get("reason", "") or ""
 
-        # 2) 향수 선택 + products 프리패치
-        if perfume_ids:
-            perfumes = Perfume.objects.filter(id__in=perfume_ids).prefetch_related("products")
-            # ID 매칭 0건일 때 폴백
-            if not perfumes.exists():
-                perfumes = (
-                    Perfume.objects.filter(main_accords__name__in=keywords)
-                    .distinct()
-                    .prefetch_related("products")
-                    .order_by("?")[:5]
-                )
-                if not perfumes.exists():
-                    perfumes = Perfume.objects.all().prefetch_related("products").order_by("?")[:5]
-        else:
-            perfumes = (
-                Perfume.objects.filter(main_accords__name__in=keywords)
-                .distinct()
-                .prefetch_related("products")
-                .order_by("?")[:5]
-            )
-            if not perfumes.exists():
-                perfumes = Perfume.objects.all().prefetch_related("products").order_by("?")[:5]
+        # 향수 선택: keywords 기반 → 없으면 전체 랜덤
+        perfumes = (
+            Perfume.objects.filter(main_accords__name__in=keywords)
+            .distinct()
+            .prefetch_related("products")
+            .order_by("?")[:5]
+        )
+        if not perfumes.exists():
+            perfumes = Perfume.objects.all().prefetch_related("products").order_by("?")[:5]
 
-        # 3) Recommendation 저장
+        # Recommendation 저장
         payload = {
             "type": Recommendation.Type.AI,
             "context": ", ".join(keywords),
@@ -61,15 +47,15 @@ class RecommendationCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         recommendation: Recommendation = serializer.save(user=request.user)
 
-        # 4) 추천 이력 저장 (bulk)
+        # 추천 이력 저장
         RecommendationHistory.objects.bulk_create(
             [RecommendationHistory(recommendation=recommendation, perfume=p) for p in perfumes]
         )
 
-        # 5) 응답 구성
+        # 응답 구성
         result = []
         for p in perfumes:
-            product = p.products.first()  # 정책에 따라 선택 로직 변경 가능 (ex. 재고/가장 저렴한/특정 용량)
+            product = p.products.first()  # 정책에 맞게 교체 가능(재고>0/최저가 등)
             result.append(
                 {
                     "perfume": {
