@@ -40,7 +40,7 @@ class TestReviewSummaryAPI:
 
     def test_review_summary_success(self):
         url = reverse("review-summary", kwargs={"product_id": self.product.id})
-        res = self.client.post(url)
+        res = self.client.get(url)
 
         assert res.status_code == 200
         data = res.json()
@@ -51,7 +51,34 @@ class TestReviewSummaryAPI:
 
     def test_review_summary_not_found(self):
         url = reverse("review-summary", kwargs={"product_id": 999999})
-        res = self.client.post(url)
+        res = self.client.get(url)
 
         assert res.status_code == 404
         assert str(res.data["detail"]) == "해당 향수 상품을 찾을 수 없습니다."
+
+    def test_review_summary_no_reviews(self):
+
+        perfume2 = Perfume.objects.create(
+            name="No Review Perfume",
+            brand="Test Brand",
+            release_year=2024,
+            intensity="eau_de_parfum",
+        )
+        product_no_reviews = Product.objects.create(
+            name="No Review Product",
+            description="A product with no reviews.",
+            category="DAILY",
+            price=12000,
+            stock=50,
+            perfume=perfume2,
+        )
+
+        url = reverse("review-summary", kwargs={"product_id": product_no_reviews.id})
+        res = self.client.post(url)
+        assert res.status_code == 200
+
+        data = res.json()
+        assert data["product_id"] == product_no_reviews.id
+        assert data["review_count"] == 0
+        assert data["average_rating"] == 0.0
+        assert len(data["latest_reviews"]) == 0
