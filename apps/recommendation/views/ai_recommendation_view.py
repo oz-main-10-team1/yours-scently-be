@@ -1,11 +1,14 @@
-from typing import List
+import random
+from typing import Any, Dict, List, Optional
 
+from django.db import transaction
+from django.db.models import Case, Prefetch, When
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.product.models import Perfume
+from apps.product.models import Perfume, Product
 from apps.recommendation.models import Recommendation, RecommendationHistory
 from apps.recommendation.serializers.ai_recommendation_serializer import (
     RecommendationCreateSerializer,
@@ -13,9 +16,31 @@ from apps.recommendation.serializers.ai_recommendation_serializer import (
 from apps.recommendation.utils.ai_recommendation import call_clova_model
 
 
+def sample_ids(qs, k=5, hard_cap=20_000):
+    # ID 개수가 너무 많으면 메모리 방지용 하드캡 (상황 보고 조절)
+    ids_qs = qs.values_list("id", flat=True)
+    count = ids_qs.count()
+    if count == 0:
+        return []
+    if count <= hard_cap:
+        ids = list(ids_qs)
+        return random.sample(ids, k=min(k, len(ids)))
+    # 크면 리저버 샘플링으로 스트리밍 처리
+    sample = []
+    for i, _id in enumerate(ids_qs.iterator(chunk_size=2000), start=1):
+        if len(sample) < k:
+            sample.append(_id)
+        else:
+            j = random.randint(1, i)
+            if j <= k:
+                sample[j - 1] = _id
+    return sample
+
+
 class RecommendationCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
         user_input: str = request.data.get("text")
         if not user_input:
@@ -27,15 +52,29 @@ class RecommendationCreateView(APIView):
         description: str = clova_response.get("description", "") or ""
         reason: str = clova_response.get("reason", "") or ""
 
-        # 향수 선택: keywords 기반 → 없으면 전체 랜덤
-        perfumes = (
-            Perfume.objects.filter(main_accords__name__in=keywords)
-            .distinct()
-            .prefetch_related("products")
-            .order_by("?")[:5]
+        # 후보 생성 (키워드 → main_accords 매칭) → 랜덤 ID 샘플 추출
+        base_qs = Perfume.objects.filter(main_accords__name__in=keywords).distinct()
+        ids = sample_ids(base_qs, k=5)
+        if not ids:
+            ids = sample_ids(Perfume.objects.all(), k=5)
+
+        # id 순서 보존 + products Prefetch (재고>0 최저가 우선, 없으면 전체 최저가 폴백)
+        preserved = Case(*[When(id=_id, then=pos) for pos, _id in enumerate(ids)]) if ids else None
+        in_stock_prefetch = Prefetch(
+            "products",
+            queryset=Product.objects.filter(stock__gt=0).order_by("price"),
+            to_attr="in_stock_products",
         )
-        if not perfumes.exists():
-            perfumes = Perfume.objects.all().prefetch_related("products").order_by("?")[:5]
+        all_sorted_prefetch = Prefetch(
+            "products",
+            queryset=Product.objects.all().order_by("price"),
+            to_attr="all_products_sorted",
+        )
+
+        perfumes_qs = Perfume.objects.filter(id__in=ids).prefetch_related(in_stock_prefetch, all_sorted_prefetch)
+        if preserved is not None:
+            perfumes_qs = perfumes_qs.order_by(preserved)
+        perfumes: List[Perfume] = list(perfumes_qs)
 
         # Recommendation 저장
         payload = {
@@ -53,17 +92,28 @@ class RecommendationCreateView(APIView):
         )
 
         # 응답 구성
-        result = []
+        results: List[Dict[str, Any]] = []
         for p in perfumes:
-            product = p.products.first()  # 정책에 맞게 교체 가능(재고>0/최저가 등)
-            result.append(
+            picked: Optional[Product] = None
+            in_stock: Optional[List[Product]] = getattr(p, "in_stock_products", None)
+            all_sorted: Optional[List[Product]] = getattr(p, "all_products_sorted", None)
+
+            if in_stock:
+                picked = in_stock[0]
+            elif all_sorted:
+                picked = all_sorted[0]
+
+            price: Optional[float] = float(picked.price) if picked else None
+            image_url: Optional[str] = picked.product_img_url if picked else None
+
+            results.append(
                 {
                     "perfume": {
                         "id": p.id,
                         "name": p.name,
                         "brand": p.brand,
-                        "price": float(product.price) if product else None,
-                        "image_url": product.product_img_url if product else None,
+                        "price": price,
+                        "image_url": image_url,
                     },
                     "context": ", ".join(keywords),
                     "created_at": recommendation.created_at.isoformat(),
@@ -75,7 +125,7 @@ class RecommendationCreateView(APIView):
                 "recommendation_id": recommendation.id,
                 "description": description,
                 "reason": reason,
-                "recommendations": result,
+                "recommendations": results,
             },
             status=status.HTTP_201_CREATED,
         )

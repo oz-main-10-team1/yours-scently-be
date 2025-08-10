@@ -12,6 +12,11 @@ from apps.users.models import User
 
 @pytest.mark.django_db
 def test_create_recommendation_with_clova_mock(monkeypatch):
+    RecommendationHistory.objects.all().delete()
+    Recommendation.objects.all().delete()
+    Product.objects.all().delete()
+    Perfume.objects.all().delete()
+
     user = User.objects.create_user(email="test@example.com", password="testpass123", nickname="테스트")
     client = APIClient()
     client.force_authenticate(user=user)

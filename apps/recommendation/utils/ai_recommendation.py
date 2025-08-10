@@ -8,7 +8,9 @@ import requests
 
 CLOVA_MODEL = "HCX-003"
 CLOVA_API_URL = "https://clovastudio.stream.ntruss.com/v1/chat-completions/" + CLOVA_MODEL
-CLOVA_API_KEY = os.environ.get("CLOVA_API_KEY")  # "Bearer ..." 형식 포함해야 함
+CLOVA_API_KEY = os.environ.get("CLOVA_API_KEY")
+if not CLOVA_API_KEY:
+    raise ValueError("CLOVA_API_KEY environment variable not set")
 
 
 def call_clova_model(user_input: str) -> Dict:
