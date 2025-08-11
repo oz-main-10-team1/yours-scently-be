@@ -74,7 +74,7 @@ class TestReviewSummaryAPI:
         )
 
         url = reverse("review-summary", kwargs={"product_id": product_no_reviews.id})
-        res = self.client.post(url)
+        res = self.client.get(url)
         assert res.status_code == 200
 
         data = res.json()

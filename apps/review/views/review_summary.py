@@ -34,9 +34,11 @@ class ReviewSummaryAPIView(APIView):
         else:
             average_rating = round(float(summary.get("average_rating") or 0.0), 1)
 
-            latest_qs = (reviews_qs.order_by("-created_at").only("id", "user_id", "content", "rating", "created_at"))[
-                :3
-            ]
+            latest_qs = (
+                reviews_qs.select_related("user")
+                .order_by("-created_at")
+                .only("id", "user_id", "content", "rating", "created_at")[:3]
+            )
             latest_reviews = list(latest_qs)
 
         payload = {
@@ -49,7 +51,4 @@ class ReviewSummaryAPIView(APIView):
         return Response(serializer.data)
 
     def get(self, request, product_id: int):
-        return self._build_response(product_id)
-
-    def post(self, request, product_id: int):
         return self._build_response(product_id)
