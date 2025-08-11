@@ -11,5 +11,5 @@ urlpatterns = [
     path("liked/products/", ProductLikeListView.as_view(), name="product-like-list"),
     # 상품목록 조회
     path("products/", ProductListView.as_view(), name="product-list"),
-    path("products/<int:pk>/", ProductDetailView.as_view(), name="product-detail"),
+    path("products/<int:product_id>/", ProductDetailView.as_view(), name="product-detail"),
 ]

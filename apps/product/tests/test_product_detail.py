@@ -38,3 +38,10 @@ def test_product_detail_api_shows_correct_product_info_success(api_client):
     assert response_data["description"] == product.description
     assert float(response_data["price"]) == float(product.price)
 
+@pytest.mark.django_db
+def test_product_detail_api_failed(api_client):
+    invalid_product_id = 123412112
+    url = f"/api/v1/products/{invalid_product_id}/"
+    response = api_client.get(url)
+
+    assert response.status_code == 404

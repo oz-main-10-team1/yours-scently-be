@@ -11,14 +11,7 @@ from apps.product.serializers.products_detail_serializers import ProductDetailSe
 class ProductDetailView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-        product_id = kwargs.get("product_id") or kwargs.get("pk")
-        if not product_id:
-            return Response(
-                {"status_code": status.HTTP_400_BAD_REQUEST, "message": "상품 ID가 제공되지 않았습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+    def get(self, request, product_id: int):
         product = get_object_or_404(Product, id=product_id)
 
         # 조회수 증가
