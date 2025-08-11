@@ -53,4 +53,6 @@ django_settings_module = "config.settings.local"
 pytest-django = "^4.11.1"
 coverage = "^7.10.1"
 types-requests = "^2.31.0"
+mypy = "^1.17.1"
+django-stubs = "^5.2.2"
 

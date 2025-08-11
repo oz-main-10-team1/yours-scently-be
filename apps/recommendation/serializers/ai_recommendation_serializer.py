@@ -20,16 +20,25 @@ class RecommendationHistorySerializer(serializers.ModelSerializer):
         fields = ["perfume"]
 
     def get_perfume(self, obj: RecommendationHistory) -> Dict[str, Any]:
-        in_stock = obj.perfume.products.filter(stock__gt=0).order_by("price").first()
-        fallback = obj.perfume.products.order_by("price").first()
-        picked: Optional[Product] = in_stock or fallback
+        products = list(obj.perfume.products.all())
+        in_stock = [p for p in products if p.stock > 0]
+
+        price_val: Optional[float] = None
+        image_url: Optional[str] = None
+
+        target = min(in_stock, key=lambda p: p.price) if in_stock else (
+            min(products, key=lambda p: p.price) if products else None
+        )
+        if target:
+            price_val = float(target.price)
+            image_url = target.product_img_url
 
         return {
             "id": obj.perfume.id,
             "name": obj.perfume.name,
             "brand": obj.perfume.brand,
-            "price": float(picked.price) if picked else None,
-            "image_url": picked.product_img_url if picked else None,
+            "price": price_val,
+            "image_url": image_url,
         }
 
 
