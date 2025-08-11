@@ -14,6 +14,7 @@ class Recommendation(models.Model):
         max_length=10,
         choices=Type.choices,
     )
+    reason = models.TextField(null=True, blank=True)
     context = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
