@@ -12,6 +12,7 @@ from apps.product.models import Perfume, Product
 from apps.recommendation.models import Recommendation, RecommendationHistory
 from apps.recommendation.serializers.ai_recommendation_serializer import (
     RecommendationCreateSerializer,
+    RecommendationListSerializer,
 )
 from apps.recommendation.utils.ai_recommendation import call_clova_model
 
@@ -81,6 +82,7 @@ class RecommendationCreateView(APIView):
             "type": Recommendation.Type.AI,
             "context": ", ".join(keywords),
             "reason": reason,
+            "description": description,
         }
         serializer = RecommendationCreateSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
@@ -123,9 +125,22 @@ class RecommendationCreateView(APIView):
         return Response(
             {
                 "recommendation_id": recommendation.id,
-                "description": description,
-                "reason": reason,
+                "description": recommendation.description,
+                "reason": recommendation.reason,
                 "recommendations": results,
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class RecommendationHistoryListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        qs = (
+            Recommendation.objects.filter(user=request.user)
+            .prefetch_related("histories__perfume__products")
+            .order_by("-created_at")
+        )
+        serializer = RecommendationListSerializer(qs, many=True)
+        return Response({"results": serializer.data})
