@@ -12,3 +12,4 @@ venv/
 apps/static
 apps/media
 staticfiles
+.coverage
