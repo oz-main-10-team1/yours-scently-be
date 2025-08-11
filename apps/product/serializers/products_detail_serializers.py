@@ -26,8 +26,6 @@ class PerfumeSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     perfume_detail = PerfumeSerializer(source="perfume", read_only=True)
-    price = serializers.SerializerMethodField()
-    created_at = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
 
     class Meta:
         model = Product
@@ -42,6 +40,3 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "perfume_detail",
             "views_count",
         ]
-
-    def get_price(self, obj):
-        return str(obj.price)
