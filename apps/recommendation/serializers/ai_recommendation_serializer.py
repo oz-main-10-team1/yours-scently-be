@@ -26,8 +26,10 @@ class RecommendationHistorySerializer(serializers.ModelSerializer):
         price_val: Optional[float] = None
         image_url: Optional[str] = None
 
-        target = min(in_stock, key=lambda p: p.price) if in_stock else (
-            min(products, key=lambda p: p.price) if products else None
+        target = (
+            min(in_stock, key=lambda p: p.price)
+            if in_stock
+            else (min(products, key=lambda p: p.price) if products else None)
         )
         if target:
             price_val = float(target.price)
