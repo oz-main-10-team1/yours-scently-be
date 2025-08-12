@@ -1,9 +1,15 @@
 import random
 from typing import Any, Dict, List, Optional
 
+import requests
 from django.db import transaction
 from django.db.models import Case, Prefetch, When
-from drf_spectacular.utils import OpenApiExample, extend_schema, inline_serializer
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -43,9 +49,14 @@ class RecommendationCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        operation_id="createRecommendation",
         tags=["recommendations"],
         summary="AI 추천 생성",
-        description="사용자 입력 텍스트를 기반으로 Clova AI가 추천을 생성하고 저장합니다.",
+        description=(
+            "사용자 입력 텍스트(`text`)를 기반으로 Clova AI를 호출하여 키워드·설명·사유를 생성하고, "
+            "추천(Recommendation) 및 추천 이력(RecommendationHistory)을 저장합니다. "
+            "재고가 있는 상품이 있으면 최저가를 우선 사용하고, 없으면 전체 최저가로 폴백합니다."
+        ),
         request=inline_serializer(
             name="RecommendationCreateRequest",
             fields={"text": serializers.CharField(help_text="추천 생성에 사용할 텍스트")},
@@ -77,13 +88,93 @@ class RecommendationCreateView(APIView):
                         )
                     ),
                 },
-            )
+            ),
+            # 400: 잘못된 요청(예: text 누락, ValidationError 등)
+            400: OpenApiResponse(
+                response=inline_serializer(
+                    name="BadRequest",
+                    fields={
+                        "detail": serializers.CharField(required=False),
+                        "non_field_errors": serializers.ListField(child=serializers.CharField(), required=False),
+                        "text": serializers.ListField(child=serializers.CharField(), required=False),
+                    },
+                ),
+                description="잘못된 요청(요청 바디 누락/유효성 실패).",
+            ),
+            # 401: 인증 실패
+            401: OpenApiResponse(
+                response=inline_serializer(name="Unauthorized", fields={"detail": serializers.CharField()}),
+                description="인증 필요(Authorization 헤더 누락/만료).",
+            ),
+            # 502: 상위(Clova) 호출 실패(네트워크/HTTP 오류, 비정상 응답)
+            502: OpenApiResponse(
+                response=inline_serializer(
+                    name="UpstreamError",
+                    fields={
+                        "detail": serializers.CharField(),
+                        "upstream": serializers.CharField(help_text="실패한 외부 시스템 식별자", required=False),
+                        "request_id": serializers.CharField(required=False),
+                    },
+                ),
+                description="외부 AI(Clova) 호출 실패 또는 비정상 응답.",
+            ),
+            # 500: 서버 내부 오류(예상치 못한 예외)
+            500: OpenApiResponse(
+                response=inline_serializer(name="ServerError", fields={"detail": serializers.CharField()}),
+                description="서버 내부 오류.",
+            ),
         },
         examples=[
+            OpenApiExample("요청 예시", value={"text": "따뜻하고 포근한 바닐라 향 추천해줘"}, request_only=True),
             OpenApiExample(
-                "요청 예시",
-                value={"text": "따뜻하고 포근한 바닐라 향 추천해줘"},
-                request_only=True,
+                "성공 201",
+                value={
+                    "recommendation_id": 1,
+                    "description": "따뜻한 '포근한' 분위기를 바탕으로 바닐라와 머스크가 어우러진 향을 추천드려요.",
+                    "reason": "감성 키워드 기반, 계절감 고려",
+                    "recommendations": [
+                        {
+                            "perfume": {
+                                "id": 101,
+                                "name": "Vanilla Dream",
+                                "brand": "ScentLab",
+                                "price": 59000.0,
+                                "image_url": "https://cdn.example.com/images/vanilla.jpg",
+                            },
+                            "context": "vanilla, musk",
+                            "created_at": "2025-08-12T12:34:56+09:00",
+                        }
+                    ],
+                },
+                response_only=True,
+            ),
+            OpenApiExample(
+                "실패 400 (text 누락)",
+                value={"detail": "text 필드는 필수입니다."},
+                response_only=True,
+                status_codes=["400"],
+            ),
+            OpenApiExample(
+                "실패 401 (미인증)",
+                value={"detail": "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."},
+                response_only=True,
+                status_codes=["401"],
+            ),
+            OpenApiExample(
+                "실패 502 (Clova 호출 실패)",
+                value={
+                    "detail": "외부 AI 호출 실패",
+                    "upstream": "clova",
+                    "request_id": "5e9d2c9a-3a86-4c90-9f5d-2f3bf6e2f3f1",
+                },
+                response_only=True,
+                status_codes=["502"],
+            ),
+            OpenApiExample(
+                "실패 500 (서버 내부 오류)",
+                value={"detail": "Internal Server Error"},
+                response_only=True,
+                status_codes=["500"],
             ),
         ],
     )
@@ -94,7 +185,21 @@ class RecommendationCreateView(APIView):
             return Response({"detail": "text 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Clova 호출 → keywords, description, reason 수신 (ID 제외)
-        clova_response = call_clova_model(user_input)
+        try:
+            clova_response = call_clova_model(user_input)
+        except requests.HTTPError as e:
+            return Response(
+                {
+                    "detail": "외부 AI 호출 실패",
+                    "upstream": "clova",
+                    "request_id": e.request.headers.get("X-NCP-CLOVASTUDIO-REQUEST-ID"),
+                },
+                status=502,
+            )
+        except ValueError as e:  # JSON 파싱 실패 등
+            return Response({"detail": str(e)}, status=502)
+        except Exception:
+            return Response({"detail": "Internal Server Error"}, status=500)
         keywords: List[str] = clova_response.get("keywords", []) or []
         description: str = clova_response.get("description", "") or ""
         reason: str = clova_response.get("reason", "") or ""
@@ -183,10 +288,68 @@ class RecommendationHistoryListView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        operation_id="listRecommendationHistories",
         tags=["recommendations"],
         summary="추천 이력 조회",
-        description="내가 생성한 모든 추천과 각 추천에 포함된 향수 이력을 최신순으로 반환합니다.",
-        responses={200: RecommendationListSerializer(many=True)},
+        description="로그인 사용자가 생성한 모든 추천(Recommendation)과 각 추천의 히스토리를 최신순으로 반환합니다.",
+        responses={
+            # 200: {"results": RecommendationList[]}
+            200: inline_serializer(
+                name="RecommendationHistoryListResponse", fields={"results": RecommendationListSerializer(many=True)}
+            ),
+            # 401: 인증 실패
+            401: OpenApiResponse(
+                response=inline_serializer(name="Unauthorized", fields={"detail": serializers.CharField()}),
+                description="인증 필요(Authorization 헤더 누락/만료).",
+            ),
+            # 500: 서버 내부 오류 (옵션)
+            500: OpenApiResponse(
+                response=inline_serializer(name="ServerError", fields={"detail": serializers.CharField()}),
+                description="서버 내부 오류.",
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                name="성공 200 (데이터 있음)",
+                value={
+                    "results": [
+                        {
+                            "id": 12,
+                            "type": "ai",
+                            "description": "따뜻한 '포근한' 분위기를 바탕으로 바닐라와 머스크가 어우러진 향을 추천드려요.",
+                            "reason": "감성 키워드 기반, 계절감 고려",
+                            "context": "vanilla, amber",
+                            "created_at": "2025-08-12T12:34:56+09:00",
+                            "histories": [
+                                {
+                                    "perfume": {
+                                        "id": 101,
+                                        "name": "Vanilla Dream",
+                                        "brand": "ScentLab",
+                                        "price": 59000.0,
+                                        "image_url": "https://cdn.example.com/images/vanilla.jpg",
+                                    }
+                                }
+                            ],
+                        }
+                    ]
+                },
+                response_only=True,
+                status_codes=["200"],
+            ),
+            OpenApiExample(
+                name="성공 200 (빈 결과)",
+                value={"results": []},
+                response_only=True,
+                status_codes=["200"],
+            ),
+            OpenApiExample(
+                name="실패 401 (미인증)",
+                value={"detail": "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."},
+                response_only=True,
+                status_codes=["401"],
+            ),
+        ],
     )
     def get(self, request):
         qs = (

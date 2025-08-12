@@ -2,8 +2,13 @@ from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,11 +26,37 @@ class WithdrawalAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        request=UserDeleteSerializer,
-        description="회원 탈퇴 API - 회원탈퇴",
-        tags=["user"],
         summary="회원 탈퇴",
-        responses={200: UserDeleteResponseSerializer},
+        description="회원이 탈퇴를 요청합니다. 이미 탈퇴 요청한 경우 400 에러를 반환합니다. "
+        "탈퇴 요청 시 계정이 비활성화되며, 14일 후 삭제됩니다.",
+        tags=["user"],
+        request=UserDeleteSerializer,
+        responses={
+            200: UserDeleteResponseSerializer,
+            400: OpenApiResponse(
+                description="이미 탈퇴 요청한 사용자",
+                response=inline_serializer(name="AlreadyWithdrawn", fields={"detail": serializers.CharField()}),
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "성공",
+                value={
+                    "message": "회원 탈퇴 완료",
+                    "email": "user@example.com",
+                    "reason": "NOT_SATISFIED",
+                    "reason_detail": "서비스 이용 불편",
+                    "due_date": "2025-08-26",
+                },
+                response_only=True,
+            ),
+            OpenApiExample(
+                "실패 - 이미 탈퇴 요청",
+                value={"detail": "이미 탈퇴 요청된 사용자입니다."},
+                status_codes=["400"],
+                response_only=True,
+            ),
+        ],
     )
     def post(self, request: Request) -> Response:
         serializer = self.serializer_class(data=request.data)

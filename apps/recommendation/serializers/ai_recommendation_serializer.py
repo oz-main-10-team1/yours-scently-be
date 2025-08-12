@@ -2,7 +2,6 @@ from typing import Any, Dict, Optional
 
 from rest_framework import serializers
 
-from apps.product.models import Product
 from apps.recommendation.models import Recommendation, RecommendationHistory
 
 
