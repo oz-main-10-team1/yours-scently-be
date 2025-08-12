@@ -53,7 +53,7 @@ urlpatterns = [
     # 마이페이지 조회
     path("user/me/mypage/", MyPageView.as_view(), name="mypage"),
     # 마이페이지 수정
-    path("user/mypage/update/", MyPageUpdateView.as_view(), name="mypage-update"),
+    path("user/me/mypage/update/", MyPageUpdateView.as_view(), name="mypage-update"),
     # 계정 찾기
     path("account/find-email/", EmailFindView.as_view(), name="email-find"),
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),

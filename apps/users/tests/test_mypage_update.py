@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.users.models.user import User  # 네 프로젝트 경로에 맞춰 수정
+from apps.users.models.user import User  
 
 
 @pytest.fixture

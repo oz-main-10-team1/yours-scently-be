@@ -3,39 +3,37 @@ from rest_framework import serializers
 from apps.product.models.perfume import Perfume
 from apps.users.models.user import User
 
-
 class MyPerfumeSerializer(serializers.ModelSerializer):
     main_accords = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Perfume
-        fields = [
-            "id",
-            "name",
-            "brand",
-            "main_accords",
-            "intensity",
-        ]
+        fields = ["id", "name", "brand", "main_accords", "intensity"]
 
 
+# ✅ 조회/수정 응답 공통 포맷
 class MyPageSerializer(serializers.ModelSerializer):
-    # ✅ 실제 User 모델에 연결된 필드명 사용 (예: perfumes)
+    birth_date = serializers.DateField(format="%Y-%m-%d", required=False, allow_null=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     perfumes = MyPerfumeSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
-            "id",
+            "id",            
             "email",
             "nickname",
             "phone_number",
             "birth_date",
             "gender",
             "created_at",
+            "updated_at",   
             "perfumes",
         ]
 
 
+# PATCH 전용(입력 검증)
 class MyPageUpdateSerializer(serializers.ModelSerializer):
     nickname = serializers.CharField(required=False, min_length=2, max_length=20)
     phone_number = serializers.RegexField(
