@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.db.models import Case, Prefetch, When
-from rest_framework import status
+from drf_spectacular.utils import OpenApiExample, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +13,7 @@ from apps.product.models import Perfume, Product
 from apps.recommendation.models import Recommendation, RecommendationHistory
 from apps.recommendation.serializers.ai_recommendation_serializer import (
     RecommendationCreateSerializer,
+    RecommendationListSerializer,
 )
 from apps.recommendation.utils.ai_recommendation import call_clova_model
 
@@ -40,6 +42,51 @@ def sample_ids(qs, k=5, hard_cap=20_000):
 class RecommendationCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["recommendations"],
+        summary="AI 추천 생성",
+        description="사용자 입력 텍스트를 기반으로 Clova AI가 추천을 생성하고 저장합니다.",
+        request=inline_serializer(
+            name="RecommendationCreateRequest",
+            fields={"text": serializers.CharField(help_text="추천 생성에 사용할 텍스트")},
+        ),
+        responses={
+            201: inline_serializer(
+                name="RecommendationCreateResponse",
+                fields={
+                    "recommendation_id": serializers.IntegerField(),
+                    "description": serializers.CharField(),
+                    "reason": serializers.CharField(),
+                    "recommendations": serializers.ListField(
+                        child=inline_serializer(
+                            name="RecommendationCreateResponseItem",
+                            fields={
+                                "perfume": inline_serializer(
+                                    name="PerfumeBrief",
+                                    fields={
+                                        "id": serializers.IntegerField(),
+                                        "name": serializers.CharField(),
+                                        "brand": serializers.CharField(),
+                                        "price": serializers.FloatField(allow_null=True),
+                                        "image_url": serializers.CharField(allow_null=True),
+                                    },
+                                ),
+                                "context": serializers.CharField(),
+                                "created_at": serializers.DateTimeField(),
+                            },
+                        )
+                    ),
+                },
+            )
+        },
+        examples=[
+            OpenApiExample(
+                "요청 예시",
+                value={"text": "따뜻하고 포근한 바닐라 향 추천해줘"},
+                request_only=True,
+            ),
+        ],
+    )
     @transaction.atomic
     def post(self, request):
         user_input: str = request.data.get("text")
@@ -81,6 +128,7 @@ class RecommendationCreateView(APIView):
             "type": Recommendation.Type.AI,
             "context": ", ".join(keywords),
             "reason": reason,
+            "description": description,
         }
         serializer = RecommendationCreateSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
@@ -123,9 +171,28 @@ class RecommendationCreateView(APIView):
         return Response(
             {
                 "recommendation_id": recommendation.id,
-                "description": description,
-                "reason": reason,
+                "description": recommendation.description,
+                "reason": recommendation.reason,
                 "recommendations": results,
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class RecommendationHistoryListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["recommendations"],
+        summary="추천 이력 조회",
+        description="내가 생성한 모든 추천과 각 추천에 포함된 향수 이력을 최신순으로 반환합니다.",
+        responses={200: RecommendationListSerializer(many=True)},
+    )
+    def get(self, request):
+        qs = (
+            Recommendation.objects.filter(user=request.user)
+            .prefetch_related("histories__perfume__products")
+            .order_by("-created_at")
+        )
+        serializer = RecommendationListSerializer(qs, many=True)
+        return Response({"results": serializer.data})

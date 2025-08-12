@@ -1,6 +1,9 @@
 from django.urls import path
 
-from apps.recommendation.views.ai_recommendation_view import RecommendationCreateView
+from apps.recommendation.views.ai_recommendation_view import (
+    RecommendationCreateView,
+    RecommendationHistoryListView,
+)
 from apps.recommendation.views.purpose_recommendation_view import (
     ProductBannerByCategoryView,
 )
@@ -8,4 +11,5 @@ from apps.recommendation.views.purpose_recommendation_view import (
 urlpatterns = [
     path("banner/<str:category>/", ProductBannerByCategoryView.as_view(), name="product-banner-by-category"),
     path("ai/", RecommendationCreateView.as_view(), name="ai-recommend"),
+    path("histories/", RecommendationHistoryListView.as_view(), name="recommendation-history"),
 ]
