@@ -29,7 +29,7 @@ services:
 
   celery:
     container_name: celery
-    image: yours_scently-django:latest
+    image: yours-scently-be-django:latest
     env_file:
       - envs/.local.env
     environment:
