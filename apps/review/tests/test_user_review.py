@@ -62,9 +62,7 @@ class TestUserReviewsAPI:
         assert data["total"] == 2
 
         first = data["reviews"][0]
-        assert {"review_id", "product_id", "product_name", "content", "rating", "created_at"} <= set(
-            first.keys()
-        )
+        assert {"review_id", "product_id", "product_name", "content", "rating", "created_at"} <= set(first.keys())
         assert first["product_id"] == self.product.id
         assert first["product_name"] == self.product.name
 
