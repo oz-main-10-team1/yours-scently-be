@@ -49,7 +49,18 @@ class MyPageUpdateSerializer(serializers.ModelSerializer):
         fields = ["nickname", "phone_number", "birth_date"]
 
     def update(self, instance, validated_data):
+        changed = []
+
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+            # 값이 실제로 달라진 경우에만 갱신 목록에 포함
+            if getattr(instance, attr) != value:
+                setattr(instance, attr, value)
+                changed.append(attr)
+
+        # 변경이 있었을 때만 저장 수행
+        if changed:
+            if hasattr(instance, "updated_at"):
+                changed.append("updated_at")
+            instance.save(update_fields=changed)
+
         return instance
