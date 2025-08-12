@@ -1,4 +1,5 @@
 from django.db import models
+from pgvector.django import IvfflatIndex, VectorField
 
 from apps.product.models import Accord, MainAccord, Note
 
@@ -26,6 +27,9 @@ class Perfume(models.Model):
     base_notes = models.ManyToManyField(Note, related_name="base_perfumes", limit_choices_to={"type": "base"})
 
     main_accords = models.ManyToManyField(MainAccord, related_name="perfumes")
+
+    # 추천용 임베딩 저장
+    embedding = VectorField(dimensions=512, null=True, blank=True)
 
     def __str__(self):
         return f"{self.brand or ''} - {self.name or ''}"
