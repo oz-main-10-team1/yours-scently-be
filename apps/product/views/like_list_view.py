@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
@@ -9,8 +9,27 @@ from apps.product.serializers.like_list_serializer import ProductLikeListSeriali
 @extend_schema(
     summary="좋아요(찜) 목록 조회",
     tags=["Product"],
-    description="로그인한 사용자가 찜한 상품 목록을 조회합니다.",
-    responses={200: ProductLikeListSerializer(many=True)},
+    description="로그인 사용자가 찜한 상품 목록을 최신순으로 반환합니다.",
+    responses={
+        200: ProductLikeListSerializer(many=True),
+    },
+    examples=[
+        OpenApiExample(
+            "성공",
+            value=[
+                {
+                    "product_id": 1,
+                    "name": "Vanilla Dream",
+                    "brand": "ScentLab",
+                    "price": "59000.00",
+                    "product_img_url": "https://cdn.example.com/images/vanilla.jpg",
+                    "is_liked": True,
+                    "liked_at": "2025-08-12T12:34:56+09:00",
+                }
+            ],
+            response_only=True,
+        )
+    ],
 )
 class ProductLikeListView(ListAPIView):
     permission_classes = [IsAuthenticated]

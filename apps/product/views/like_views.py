@@ -1,4 +1,4 @@
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,8 +12,15 @@ class ProductLikeAPIView(APIView):
 
     @extend_schema(
         summary="상품 좋아요 추가",
-        responses={200: ProductLikeResponseSerializer, 404: OpenApiResponse(description="존재하지 않는 상품")},
         tags=["Product"],
+        responses={
+            200: ProductLikeResponseSerializer,
+            404: OpenApiResponse(description="존재하지 않는 상품"),
+        },
+        examples=[
+            OpenApiExample("성공", value={"liked": True}),
+            OpenApiExample("실패 - 존재하지 않음", value={"detail": "존재하지 않는 상품입니다."}),
+        ],
     )
     # 좋아요
     def post(self, request, product_id):
@@ -32,12 +39,17 @@ class ProductLikeAPIView(APIView):
 
     @extend_schema(
         summary="상품 좋아요 취소",
+        tags=["Product"],
         responses={
             200: ProductLikeResponseSerializer,
-            400: OpenApiResponse(description="찜한 내역이 없습니다."),
+            400: OpenApiResponse(description="찜한 내역 없음 / 이미 취소됨"),
             404: OpenApiResponse(description="존재하지 않는 상품"),
         },
-        tags=["Product"],
+        examples=[
+            OpenApiExample("성공", value={"liked": False}),
+            OpenApiExample("실패 - 이미 취소됨", value={"detail": "이미 찜하지 않은 상태입니다."}),
+            OpenApiExample("실패 - 내역 없음", value={"detail": "찜한 내역이 없습니다."}),
+        ],
     )
     # 좋아요 삭제
     def delete(self, request, product_id):

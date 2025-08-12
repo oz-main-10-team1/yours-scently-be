@@ -1,8 +1,6 @@
-from typing import Dict
-
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,10 +21,27 @@ class KakaoLoginAPIView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        request=SocialLoginSerializer,
-        responses={200: Dict[str, str], 400: Dict[str, str]},
-        tags=["auth"],
         summary="카카오 소셜 로그인",
+        tags=["auth"],
+        description="카카오 인가 코드(code)로 로그인하여 JWT 토큰을 발급합니다.",
+        request=SocialLoginSerializer,
+        responses={
+            200: inline_serializer(
+                name="KakaoLoginSuccess",
+                fields={
+                    "access_token": serializers.CharField(),
+                    "refresh_token": serializers.CharField(),
+                },
+            ),
+            400: OpenApiResponse(
+                description="잘못된 요청 또는 인가 코드 오류",
+                response=inline_serializer(name="KakaoLoginBadRequest", fields={"detail": serializers.CharField()}),
+            ),
+            500: OpenApiResponse(
+                description="카카오 서버 오류 또는 내부 서버 오류",
+                response=inline_serializer(name="KakaoLoginServerError", fields={"detail": serializers.CharField()}),
+            ),
+        },
     )
     def post(self, request):
         serializer = SocialLoginSerializer(data=request.data)
