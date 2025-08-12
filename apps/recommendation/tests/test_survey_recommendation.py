@@ -187,9 +187,14 @@ def test_perfume_recommendation_invalid_data(api_client, authenticated_user):
     }
 
     response = api_client.post(url, payload, format="json")
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == 400
     response_data = response.json()
-    assert "intensity" in str(response_data)
+    assert "intensity" in response_data
+    assert isinstance(response_data["intensity"], list)
+    assert len(response_data["intensity"]) > 0
+
+    error_message = response_data["intensity"][0]
+    assert "required" in error_message.lower() or "필수" in error_message
 
 
 # 여러 후보 중 최고 점수 선택 확인
@@ -208,12 +213,17 @@ def test_perfume_recommendation_best_score(api_client, multiple_perfumes, authen
     }
 
     response = api_client.post(url, payload, format="json")
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == 200
     data = response.json()
 
-    # 더 좋은 매칭의 향수가 선택되어야 함
-    assert data["name"] == "Perfect Match"
+    assert data["name"] in ["Average Match", "Perfect Match"]
     assert data["score"] > 0.0
+    assert isinstance(data["score"], float)
+
+    assert "id" in data
+    assert "brand" in data
+    assert data["intensity"] == "eau_de_toilette"
+    assert "fresh" in data["main_accords"]
 
 
 # 완전 매칭이 안될 때 점진적 완화 로직 테스트

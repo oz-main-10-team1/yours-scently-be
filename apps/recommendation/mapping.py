@@ -40,7 +40,7 @@ MOOD_MAP = {
         "iris",
         "lavender",
     ],
-    "에너지 넘치고 활기찬 느낌": ["citrus", "fruity", "tropical", "caramel", "almond", "caramel", "sweet"],
+    "에너지 넘치고 활기찬 느낌": ["citrus", "fruity", "tropical", "caramel", "almond", "sweet"],
     "신비롭고 매혹적인 느낌": ["warm spicy", "cinnamon", "nutty", "amber", "sweet", "patchouli", "animalic"],
 }
 # 평소에 어떤 향의 강도를 선호하시나요? -> Perfume.intensity (CharField: IntensityChoices)
@@ -133,6 +133,5 @@ KEYWORD_MAP = {
         "marine",
         "sea breeze",
         "chamomile",
-        "myrrh",
     ],
 }

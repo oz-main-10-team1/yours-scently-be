@@ -4,11 +4,13 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 from django.db.models import Q
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse,
     extend_schema,
 )
+from pgvector.django import CosineDistance
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -98,7 +100,7 @@ class PerfumeRecommendationView(APIView):
         if intensities:
             base_q &= Q(intensity__in=intensities)
         if usage_code:
-            base_q &= Q(products__category=usage_code)
+            base_q &= Q(products__category=usage_code)  # Product의 FK 관계 사용
         if keyword_targets:
             base_q &= (
                 Q(top_notes__name__in=keyword_targets)
@@ -140,25 +142,47 @@ class PerfumeRecommendationView(APIView):
         model = get_embed_model()
         survey_vec = self._safe_encode(model, survey_text)
 
-        best: Tuple[dict, float] | None = None
-        for p in candidates:
-            perfume_text = self._make_perfume_text(p)
-            p_vec = self._safe_encode(model, perfume_text)
-            sim = self._cosine(survey_vec, p_vec)
+        # pgvector를 사용한 DB 수준 코사인 유사도 검색
+        candidates_with_embedding = (
+            candidates.filter(embedding__isnull=False)
+            .annotate(similarity=1 - CosineDistance("embedding", survey_vec))  # 1 - distance = similarity
+            .order_by("-similarity")  # 유사도 높은 순으로 정렬
+        )
 
-            item = {
-                "id": p.id,
-                "name": getattr(p, "name", None) or "",
-                "brand": getattr(p, "brand", None) or "",
-                "intensity": getattr(p, "intensity", None),
-                "main_accords": list(p.main_accords.values_list("name", flat=True)),
-                "score": float(round(sim, 6)),
-            }
-            if (best is None) or (sim > best[1]):
-                best = (item, sim)
+        if not candidates_with_embedding.exists():
+            # 임베딩이 없는 경우 fallback
+            if candidates.exists():
+                first_perfume = candidates.first()
+                item = {
+                    "id": first_perfume.id,
+                    "name": getattr(first_perfume, "name", None) or "",
+                    "brand": getattr(first_perfume, "brand", None) or "",
+                    "intensity": getattr(first_perfume, "intensity", None),
+                    "main_accords": list(first_perfume.main_accords.values_list("name", flat=True)),
+                    "score": 0.5,
+                }
+                resp_ser = PerfumeBriefSerializer(item)
+                return Response(resp_ser.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"message": "조건에 맞는 향수를 찾을 수 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
-        assert best is not None
-        resp_ser = PerfumeBriefSerializer(best[0])
+        # 가장 유사한 향수 선택
+        best_perfume = candidates_with_embedding.first()
+
+        item = {
+            "id": best_perfume.id,
+            "name": getattr(best_perfume, "name", None) or "",
+            "brand": getattr(best_perfume, "brand", None) or "",
+            "intensity": getattr(best_perfume, "intensity", None),
+            "main_accords": list(best_perfume.main_accords.values_list("name", flat=True)),
+            "score": float(round(best_perfume.similarity, 6)),
+        }
+
+        assert item is not None
+        resp_ser = PerfumeBriefSerializer(item)
         return Response(resp_ser.data, status=status.HTTP_200_OK)
 
     def _make_survey_text(self, mood: str, intensity: str, usage: str, keyword: str) -> str:
