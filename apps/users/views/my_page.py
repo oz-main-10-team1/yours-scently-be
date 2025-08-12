@@ -17,6 +17,7 @@ class MyPageView(APIView):
             {"code": 200, "message": "마이페이지 정보 조회 성공", "data": serializer.data}, status=status.HTTP_200_OK
         )
 
+
 class MyPageUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 

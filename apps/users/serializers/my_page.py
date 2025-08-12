@@ -35,6 +35,7 @@ class MyPageSerializer(serializers.ModelSerializer):
             "perfumes",
         ]
 
+
 class MyPageUpdateSerializer(serializers.ModelSerializer):
     nickname = serializers.CharField(required=False, min_length=2, max_length=20)
     phone_number = serializers.RegexField(

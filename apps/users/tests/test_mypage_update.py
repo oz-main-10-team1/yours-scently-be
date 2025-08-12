@@ -3,7 +3,9 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from apps.users.models.user import User  # 네 프로젝트 경로에 맞춰 수정
+
 
 @pytest.fixture
 def user(db):
@@ -16,9 +18,11 @@ def user(db):
         gender="male",
     )
 
+
 @pytest.fixture
 def client():
     return APIClient()
+
 
 @pytest.fixture
 def auth_client(client, user):

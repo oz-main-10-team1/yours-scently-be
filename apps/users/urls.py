@@ -20,7 +20,7 @@ from apps.users.views.find_account_views import (
 from apps.users.views.fragrance.fragrance_preference import (
     FragrancePreferenceView,
 )
-from apps.users.views.my_page import MyPageView, MyPageUpdateView
+from apps.users.views.my_page import MyPageUpdateView, MyPageView
 from apps.users.views.my_profile import (
     ChangePasswordView,
     MyProfileUpdateView,
