@@ -20,7 +20,7 @@ from apps.users.views.find_account_views import (
 from apps.users.views.fragrance.fragrance_preference import (
     FragrancePreferenceView,
 )
-from apps.users.views.my_page import MyPageView
+from apps.users.views.my_page import MyPageUpdateView, MyPageView
 from apps.users.views.my_profile import (
     ChangePasswordView,
     MyProfileUpdateView,
@@ -52,6 +52,8 @@ urlpatterns = [
     path("users/me/check-nickname/", NicknameDuplicateCheckView.as_view(), name="update-check-nickname"),
     # 마이페이지 조회
     path("user/me/mypage/", MyPageView.as_view(), name="mypage"),
+    # 마이페이지 수정
+    path("user/me/mypage/update/", MyPageUpdateView.as_view(), name="mypage-update"),
     # 계정 찾기
     path("account/find-email/", EmailFindView.as_view(), name="email-find"),
     path("account/send-reset-code/", PasswordResetEmailSendView.as_view(), name="send-reset-code"),
