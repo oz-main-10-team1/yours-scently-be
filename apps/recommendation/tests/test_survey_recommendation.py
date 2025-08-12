@@ -50,7 +50,6 @@ def perfume_test_data(db):
         intensity="eau_de_toilette",  # 실제 choices 값으로 수정
     )
 
-    # ManyToMany 관계 설정
     perfume.top_notes.add(top_note)
     perfume.middle_notes.add(mid_note)
     perfume.base_notes.add(base_note)
@@ -70,7 +69,7 @@ def perfume_test_data(db):
     return perfume
 
 
-# 여러 향수 중 점수 비교 테스트용
+# 여러 향수 중 점수 비교 테스트
 @pytest.fixture
 def multiple_perfumes(db):
     # 노트 생성
