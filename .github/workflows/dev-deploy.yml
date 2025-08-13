@@ -8,7 +8,7 @@ on:
 jobs:
   dev_deploy:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 90
 
     steps:
       - name: Checkout Repository
@@ -37,6 +37,7 @@ jobs:
           host: ${{ secrets.NCP_DEV_HOST }}
           username: ${{ secrets.NCP_DEV_USER }}
           key: ${{ secrets.NCP_DEV_SSH_KEY }}
+          command_timeout: 60m
           script: |
             cd yours_scently
             
