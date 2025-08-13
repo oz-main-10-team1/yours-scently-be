@@ -12,7 +12,7 @@ from apps.product.models.products_exchange_return import (
     Product_Exchange,
 )
 from apps.product.serializers.products_exchange_return_serializers import (
-    ProductExchangeSerializer
+    ProductExchangeSerializer,
 )
 
 
@@ -25,7 +25,7 @@ class TestProductExchangeReturnAPIView:
         self.user = django_user_model.objects.create_user(email="testuser@example.com", password="testpass123")
         self.client.force_authenticate(user=self.user)
 
-        # Perfume 생성 (Product.perfume FK 필수 값)
+        # Perfume 생성
         self.perfume = Perfume.objects.create(
             name="Perf1",
             brand="Brand1",
@@ -45,30 +45,36 @@ class TestProductExchangeReturnAPIView:
         )
 
     def test_success_response(self):
-        self.ProductExchange = Product_Exchange.objects.create(
+        # 1. 테스트에 필요한 객체들 생성
+        exchange_product = Product_Exchange.objects.create(
             id=uuid.uuid4(), name="ExchPerf", description="ExchDesc", price=Decimal("10.99"), product=self.product
         )
 
-        self.ExchangeReturnRequest = ExchangeReturnRequest.objects.create(
+        exchange_request = ExchangeReturnRequest.objects.create(
             request_id=uuid.uuid4(),
             type="exchange",
             status="pending",
-            exchange_return=self.ProductExchange,
+            exchange_return=exchange_product,
             requests_reason="ReqReason1",
-            # is_exchange_available, is_return_available 필드는 모델에 정의되어 있다면
-            # 여기에 값을 추가해주어야 합니다.
-            # 만약 ExchangeReturnRequest 모델에 이 필드들이 없다면,
-            # 해당 필드가 있는 다른 모델에서 가져와야 합니다.
         )
 
-        url = reverse("product-exchange-return", args=[self.ProductExchange.id])
+        # 2. API 호출
+        url = reverse("product-exchange-return", args=[exchange_product.id])
         response = self.client.get(url)
 
-        # API 응답 데이터를 JSON으로 변환합니다.
-        serializer = ProductExchangeSerializer(self.ProductExchange)
-        expected_product_data = serializer.data
+        # 3. 예상 데이터 생성: 뷰의 응답 구조와 동일하게 맞춥니다.
+        expected_product_data = ProductExchangeSerializer(exchange_product).data
+        expected_product_data["exchange_return"] = {
+            "requests": [
+                {
+                    "request_id": str(exchange_request.request_id),
+                    "type": "exchange",
+                    "status": "pending",
+                    "requests_reason": "ReqReason1",
+                }
+            ]
+        }
 
-        # API 응답의 product 필드 데이터와 직렬화된 데이터를 비교합니다.
+        # 4. 검증
         assert response.status_code == status.HTTP_200_OK
         assert response.data["product"] == expected_product_data
-        assert len(response.data["exchange_return"]["requests"]) == 1

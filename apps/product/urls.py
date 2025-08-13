@@ -15,5 +15,8 @@ urlpatterns = [
     # 상품목록 조회
     path("products/", ProductListView.as_view(), name="product-list"),
     path("products/<int:product_id>/", ProductDetailView.as_view(), name="product-detail"),
-    path("products/<uuid:product_exchange_id>/", ProductExchangeReturnAPIView.as_view(),name="product-exchange-return"),
+    # apps/product/urls.py
+    path(
+        "products/<uuid:product_exchange_id>/", ProductExchangeReturnAPIView.as_view(), name="product-exchange-return"
+    ),
 ]

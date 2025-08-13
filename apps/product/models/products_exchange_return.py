@@ -7,39 +7,38 @@ from apps.product.models import Product
 
 class Product_Exchange(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="exchanges")
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    product_img_url = models.CharField(max_length=200, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="exchanges")
+
+    # 테스트에서 필요한 필드 추가
+    is_exchange_available = models.BooleanField(default=True)
+    is_return_available = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
 
 
 class ExchangeReturnRequest(models.Model):
-    REQUEST_TYPE_CHOICES = (
-        ("exchange", "교환"),
-        ("return", "반품"),
-    )
-    STATUS_CHOICES = (
-        ("pending", "대기"),
-        ("processing", "처리중"),
-        ("completed", "승인 완료"),
-        ("rejected", "승인 거절"),
-    )
+    REQUEST_TYPE_CHOICES = [
+        ("exchange", "Exchange"),
+        ("return", "Return"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
 
     request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # order_id가 주문 모델 FK이면 이렇게:
-    # order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
-    type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    requested_at = models.DateTimeField(auto_now_add=True)  # 객체가 생성될 때 자동으로 타임스탬프를 추가합니다.
-    reason = models.TextField(null=True, blank=True)  # 더 일반적인 '사유' 필드로 변경합니다.
-    exchange_return = models.ForeignKey("Product_Exchange", on_delete=models.SET_NULL, null=True, blank=True)
-    requests_reason = models.CharField(max_length=100, null=True, blank=True)
-    is_exchange_available = models.BooleanField(default=True)
-    is_return_available = models.BooleanField(default=False)
+    type = models.CharField(max_length=10, choices=REQUEST_TYPE_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    exchange_return = models.ForeignKey(Product_Exchange, on_delete=models.CASCADE, related_name="requests")
+    requests_reason = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"[{self.get_type_display()} - {self.get_status_display()}]"
+        return f"{self.type} request for {self.exchange_return.name}"
