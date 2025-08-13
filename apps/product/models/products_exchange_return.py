@@ -32,11 +32,11 @@ class ExchangeReturnRequest(models.Model):
     request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # order_id가 주문 모델 FK이면 이렇게:
     # order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
-    order_id = models.CharField(max_length=100, null=True, blank=True)
     type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    requests_at = models.DateTimeField(null=True, blank=True)
-    exchange_return = models.CharField(max_length=100, null=True, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)  # 객체가 생성될 때 자동으로 타임스탬프를 추가합니다.
+    reason = models.TextField(null=True, blank=True)  # 더 일반적인 '사유' 필드로 변경합니다.
+    exchange_return = models.ForeignKey("Product_Exchange", on_delete=models.SET_NULL, null=True, blank=True)
     requests_reason = models.CharField(max_length=100, null=True, blank=True)
     is_exchange_available = models.BooleanField(default=True)
     is_return_available = models.BooleanField(default=False)

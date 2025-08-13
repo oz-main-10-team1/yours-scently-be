@@ -8,17 +8,16 @@ from apps.product.models.products_exchange_return import (
 
 class ExchangeReturnRequestSerializer(serializers.ModelSerializer):
     request_id = serializers.UUIDField()
-    order_id = serializers.IntegerField(required=False, allow_null=True)  # 모델에 order_id 없으면 제거하세요
-    type = serializers.CharField(source="requests_type")
+    type = serializers.CharField()
     status = serializers.CharField()
-    requested_at = serializers.CharField(source="requests_at")  # DateTimeField면 DateTimeField로 변경하세요
+    requested_at = serializers.DateTimeField()
     reason = serializers.CharField(source="requests_reason", allow_blank=True, required=False)
 
     class Meta:
         model = ExchangeReturnRequest
         fields = [
             "request_id",
-            "order_id",
+            # "order_id", # 모델에 없는 필드이므로 제거
             "type",
             "status",
             "requested_at",

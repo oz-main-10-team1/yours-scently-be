@@ -15,7 +15,5 @@ urlpatterns = [
     # 상품목록 조회
     path("products/", ProductListView.as_view(), name="product-list"),
     path("products/<int:product_id>/", ProductDetailView.as_view(), name="product-detail"),
-    path(
-        "products/<uuid:products_exchange_id>/", ProductExchangeReturnAPIView.as_view(), name="product-exchange-return"
-    ),
+    path("products/<uuid:product_exchange_id>/", ProductExchangeReturnAPIView.as_view(),name="product-exchange-return"),
 ]
