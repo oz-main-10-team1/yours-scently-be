@@ -31,6 +31,9 @@ services:
   celery:
     container_name: celery
     image: yours-scently-be-django:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
     env_file:
       - envs/.local.env
     environment:
