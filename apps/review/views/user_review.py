@@ -1,7 +1,3 @@
-from typing import List
-
-from django.core.paginator import EmptyPage, Paginator
-from django.db.models import QuerySet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,29 +10,22 @@ class UserReviewsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        page = int(request.query_params.get("page", 1))
-        size = int(request.query_params.get("size", 10))
-
-        qs: QuerySet[Review] = (
-            Review.objects.filter(user=request.user)
-            .select_related("product", "product__perfume")
-            .order_by("-created_at")
-        )
-
-        paginator = Paginator(qs, size)
         try:
-            page_obj = paginator.page(page)
-        except EmptyPage:
-            page_obj = paginator.page(paginator.num_pages) if paginator.num_pages else []
+            page = int(request.query_params.get("page", 1))
+            size = int(request.query_params.get("size", 10))
+        except ValueError:
+            return Response({"detail": "page와 size는 정수여야 합니다."}, status=400)
 
-        items: List[Review] = list(page_obj.object_list) if hasattr(page_obj, "object_list") else []
+        page = max(1, page)
+        size = max(1, size)
 
-        payload = {
-            "reviews": items,
-            "page": page if paginator.count else 1,
-            "size": size,
-            "total": paginator.count,
-        }
+        qs = Review.objects.filter(user=request.user).select_related("product").order_by("-created_at")  # N+1 방지
 
-        serializer = UserReviewListSerializer(payload)
+        total = qs.count()
+
+        start = (page - 1) * size
+        end = start + size
+        items = list(qs[start:end])
+
+        serializer = UserReviewListSerializer({"reviews": items, "page": page, "size": size, "total": total})
         return Response(serializer.data)

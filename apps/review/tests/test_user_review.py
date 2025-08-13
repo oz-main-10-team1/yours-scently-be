@@ -12,18 +12,20 @@ class TestUserReviewsAPI:
     def setup_method(self):
         self.client = APIClient()
 
-        # 유니크 제약(10자리) 충족: 010 + 7자리
         self.user = User.objects.create_user(
             email="me@example.com",
-            password="testpassword",
-            nickname="me_user",
-            phone_number="0101234567",
+            password="testpass123!",
+            name="테스터",
+            nickname="tester_me",
+            phone_number="01012345678",
+            is_active=True,
         )
 
         self.client.force_authenticate(user=self.user)
 
         self.perfume = Perfume.objects.create(
             name="테스트 퍼퓸",
+            brand="테스트 브랜드",
             release_year=2025,
             intensity="eau_de_parfum",
         )
@@ -36,58 +38,59 @@ class TestUserReviewsAPI:
             perfume=self.perfume,
         )
 
-    def test_user_reviews_success(self):
-        Review.objects.create(
+    def _make_review(self, idx: int, rating: int = 5):
+        return Review.objects.create(
             user=self.user,
             product=self.product,
-            content="정말 좋아요!",
-            rating=5,
-        )
-        Review.objects.create(
-            user=self.user,
-            product=self.product,
-            content="그냥 그래요",
-            rating=3,
+            content=f"리뷰 {idx}",
+            rating=rating,
         )
 
+    def test_user_reviews_success(self):
+        for i in range(12):
+            self._make_review(i)
+
         url = reverse("user-reviews")
-        res = self.client.get(url, {"page": 1, "size": 10})
+        res = self.client.get(url, {"page": 2, "size": 5})
 
         assert res.status_code == 200
         data = res.json()
-
-        assert "reviews" in data and isinstance(data["reviews"], list)
-        assert data["page"] == 1
-        assert data["size"] == 10
-        assert data["total"] == 2
-
-        first = data["reviews"][0]
-        assert {"review_id", "product_id", "product_name", "content", "rating", "created_at"} <= set(first.keys())
-        assert first["product_id"] == self.product.id
-        assert first["product_name"] == self.product.name
+        assert data["page"] == 2
+        assert data["size"] == 5
+        assert data["total"] == 12
+        assert len(data["reviews"]) == 5
+        item = data["reviews"][0]
+        assert {"review_id", "product_id", "product_name", "content", "rating", "created_at"} <= set(item.keys())
 
     def test_user_reviews_unauthorized(self):
         self.client.force_authenticate(user=None)
         url = reverse("user-reviews")
         res = self.client.get(url)
+
         assert res.status_code == 401
 
     def test_user_reviews_no_reviews(self):
-        other = User.objects.create_user(
-            email="other@example.com",
-            password="testpassword",
-            nickname="other_user",
-            phone_number="0100000001",
-        )
-
-        self.client.force_authenticate(user=self.user)
         url = reverse("user-reviews")
-        res = self.client.get(url, {"page": 1, "size": 10})
+        res = self.client.get(url)
 
         assert res.status_code == 200
         data = res.json()
-
         assert data["total"] == 0
-        assert data["page"] == 1
-        assert data["size"] == 10
-        assert isinstance(data["reviews"], list) and len(data["reviews"]) == 0
+        assert len(data["reviews"]) == 0
+
+    def test_user_reviews_invalid_query_params(self):
+        url = reverse("user-reviews")
+        res = self.client.get(url, {"page": "abc", "size": "xyz"})
+        assert res.status_code == 400
+        assert "page와 size는 정수여야 합니다." in res.json().get("detail", "")
+
+    def test_user_reviews_out_of_range(self):
+        for i in range(3):
+            self._make_review(i)
+
+        url = reverse("user-reviews")
+        res = self.client.get(url, {"page": 9, "size": 10})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total"] == 3
+        assert len(data["reviews"]) == 0
