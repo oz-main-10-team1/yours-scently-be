@@ -5,6 +5,7 @@ services:
       - envs/.local.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.local
+    image: yours_scently-django:latest
     build:
       context: .
     working_dir: /yours_scently
@@ -64,7 +65,7 @@ services:
       - ws
 
   db:
-    image: postgres:14
+    image: pgvector/pgvector:0.8.0-pg14
     container_name: postgres
     environment:
       POSTGRES_USER: postgres

@@ -76,4 +76,4 @@ class ProductListAPITest(APITestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertIn("detail", response.data)
-        self.assertIn("자격 인증데이터", str(response.data["detail"]))
+        self.assertIn("자격 인증 데이터", str(response.data["detail"]))
