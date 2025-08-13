@@ -74,11 +74,9 @@ class RecommendationReasonView(APIView):
 
         # 향수확인
         try:
-            perfume = (
-                Perfume.objects.select_related()
-                .prefetch_related("top_notes", "middle_notes", "base_notes", "main_accords", "products")
-                .get(id=perfume_id)
-            )
+            perfume = Perfume.objects.prefetch_related(
+                "top_notes", "middle_notes", "base_notes", "main_accords", "products"
+            ).get(id=perfume_id)
         except Perfume.DoesNotExist:
             return Response(
                 {"message": "해당 향수를 찾을 수 없습니다."},
@@ -143,8 +141,9 @@ class RecommendationReasonView(APIView):
             + list(perfume.base_notes.values_list("name", flat=True))
         )
 
+        lower_keyword_targets = {target.lower() for target in keyword_targets}
         for note in all_notes:
-            if note.lower() in [target.lower() for target in keyword_targets]:
+            if note.lower() in lower_keyword_targets:
                 matched_notes.append(note)
 
         # 중복 제거
