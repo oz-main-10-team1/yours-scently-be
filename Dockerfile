@@ -17,9 +17,6 @@ RUN poetry install --no-interaction --no-root
 # ---- Final Stage ----
 FROM python:3.13-slim
 
-# gunicorn 실행파일이 PATH에서 잡히도록 보장
-ENV PATH="/usr/local/bin:${PATH}"
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
