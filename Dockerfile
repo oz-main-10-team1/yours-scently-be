@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set WORKDIR
 WORKDIR /yours_scently
 
 # install poetry
@@ -20,34 +19,34 @@ RUN poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock ./
 
 # install dependencies
-# We don't need to clean cache here as this is a builder stage
 RUN poetry install --no-interaction --no-root
 
 
 # ---- Final Stage ----
 FROM python:3.13-slim
 
-# Install only runtime system dependencies
-# libpq-dev is for building, libpq5 is for runtime.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set WORKDIR
 WORKDIR /yours_scently
 
-# Create a non-root user
 RUN addgroup --system app && adduser --system --group app
 
+# static / media 디렉토리 생성 및 권한 부여
+RUN mkdir -p /yours_scently/apps/static \
+    && mkdir -p /yours_scently/apps/media \
+    && mkdir -p /yours_scently/staticfiles \
+    && chown -R app:app /yours_scently/apps \
+    && chown -R app:app /yours_scently/staticfiles
+
 # Copy installed packages from builder stage
-# The path /usr/local/lib/python3.13/site-packages is where packages are installed
-# when `virtualenvs.create` is false.
 COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
 
-# copy project files
+# Copy project files
 COPY --chown=app:app ./ ./
 
 USER app
 
-# Set entrypoint or cmd
-# e.g., CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+# Default command
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
