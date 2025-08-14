@@ -61,11 +61,12 @@ def product(perfume):
 def reviews(user, product):
     reviews = []
     for i in range(5):
+        review_number = 5 - i
         review = Review.objects.create(
             user=user,
             product=product,
             rating=(i % 5) + 1,
-            content=f"테스트 리뷰 내용 {i+1}",
+            content=f"테스트 리뷰 내용 {review_number}",
             created_at=timezone.now() - timezone.timedelta(days=i),
         )
         reviews.append(review)
@@ -79,7 +80,11 @@ class TestReviewListAPI:
         url = reverse("product-reviews", kwargs={"product_id": product.id})
         response = api_client.get(url)
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert "total_count" in response.data
+        assert "page" in response.data
+        assert "limit" in response.data
+        assert "reviews" in response.data
 
     def test_get_review_list_authenticated(self, api_client, user, product, reviews):
         url = reverse("product-reviews", kwargs={"product_id": product.id})

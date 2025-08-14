@@ -8,6 +8,7 @@ from apps.review.views.user_review import UserReviewsAPIView
 urlpatterns = [
     path("scents/<int:product_id>/reviews/", ReviewCreateAPIView.as_view(), name="review-create"),
     path("scents/<int:product_id>/review-summary/", ReviewSummaryAPIView.as_view(), name="review-summary"),
+    path("scents/<int:product_id>/reviews-list/", ReviewListAPIView.as_view(), name="product-reviews"),
     path("products/<int:product_id>/reviews-list/", ReviewListAPIView.as_view(), name="product-reviews"),
     path("api/v1/user/me/reviews/", UserReviewsAPIView.as_view(), name="user-reviews"),
 ]
