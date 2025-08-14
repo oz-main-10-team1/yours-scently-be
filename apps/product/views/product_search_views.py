@@ -50,7 +50,8 @@ def is_m2m_field(model, name: str) -> bool:
 
 class ProductSearchAPI(APIView):
     permission_classes = [AllowAny]
-# 스웨거 스키마 추가
+
+    # 스웨거 스키마 추가
     @extend_schema(
         summary="상품 검색",
         tags=["Product"],
