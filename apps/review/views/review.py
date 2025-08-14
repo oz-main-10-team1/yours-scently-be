@@ -1,3 +1,4 @@
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework import permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import CreateAPIView
@@ -7,6 +8,25 @@ from apps.product.models import Product
 from apps.review.serializers.review import ReviewCreateSerializer
 
 
+@extend_schema(
+    summary="향수 리뷰 저장",
+    tags=["Review"],
+    request=ReviewCreateSerializer,
+    responses={
+        201: ReviewCreateSerializer,
+        404: OpenApiResponse(description="존재하지 않는 향수 상품"),
+    },
+    examples=[
+        OpenApiExample(
+            "성공",
+            value={"id": 1, "product": 123, "user": 456, "content": "정말 좋은 향이에요!", "rating": 5},
+        ),
+        OpenApiExample(
+            "실패 - 존재하지 않는 상품",
+            value={"detail": "해당 향수 상품을 찾을 수 없습니다."},
+        ),
+    ],
+)
 class ReviewCreateAPIView(CreateAPIView):
     serializer_class = ReviewCreateSerializer
     permission_classes = [permissions.IsAuthenticated]

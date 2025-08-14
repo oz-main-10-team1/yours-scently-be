@@ -1,4 +1,5 @@
 from django.db.models import Avg, Count
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,10 +10,46 @@ from apps.review.models import Review
 from apps.review.serializers.review_summary import ReviewSummarySerializer
 
 
+@extend_schema(
+    summary="상품 리뷰 요약 조회",
+    tags=["Review"],
+    responses={
+        200: ReviewSummarySerializer,
+        404: OpenApiResponse(description="존재하지 않는 향수 상품"),
+    },
+    examples=[
+        OpenApiExample(
+            "성공",
+            value={
+                "product_id": 1,
+                "average_rating": 4.2,
+                "review_count": 5,
+                "latest_reviews": [
+                    {
+                        "id": 10,
+                        "user_id": 3,
+                        "content": "산뜻한 향이에요.",
+                        "rating": 4,
+                        "created_at": "2025-08-01T12:00:00Z",
+                    },
+                    {
+                        "id": 9,
+                        "user_id": 4,
+                        "content": "생각보다 향이 강했어요.",
+                        "rating": 3,
+                        "created_at": "2025-07-28T09:00:00Z",
+                    },
+                ],
+            },
+        ),
+        OpenApiExample(
+            "실패 - 존재하지 않는 상품",
+            value={"detail": "해당 향수 상품을 찾을 수 없습니다."},
+        ),
+    ],
+)
 class ReviewSummaryAPIView(APIView):
     permission_classes = [IsAuthenticated]
-
-    # schema는 전부 작성 후 파일 병합할 때 진행 예정
 
     def _build_response(self, product_id: int) -> Response:
         try:
