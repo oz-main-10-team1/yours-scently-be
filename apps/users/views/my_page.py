@@ -1,4 +1,5 @@
-from rest_framework import status
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,6 +12,21 @@ from apps.users.serializers.my_page import MyPageSerializer, MyPageUpdateSeriali
 class MyPageView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="마이페이지 조회",
+        tags=["MyPage"],
+        responses={
+            200: inline_serializer(
+                name="MyPageGetResponse",
+                fields={
+                    "code": serializers.IntegerField(),
+                    "message": serializers.CharField(),
+                    "data": MyPageSerializer(),
+                },
+            ),
+            401: OpenApiResponse(description="인증 실패"),
+        },
+    )
     def get(self, request):
         user = User.objects.prefetch_related("perfumes__main_accords").get(pk=request.user.pk)
         serializer = MyPageSerializer(user)
@@ -22,6 +38,11 @@ class MyPageView(APIView):
 class MyPageUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="마이페이지 정보 수정",
+        tags=["MyPage"],
+        responses={200: MyPageSerializer, 400: OpenApiResponse(description="형식 오류 또는 잘못된 요청 데이터")},
+    )
     def patch(self, request):
         user = request.user
         serializer = MyPageUpdateSerializer(user, data=request.data, partial=True)
