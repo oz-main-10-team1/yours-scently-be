@@ -18,7 +18,7 @@ class S3Uploader:
         ncp_access_key_id = settings.NCP_ACCESS_KEY
         ncp_secret_access_key = settings.NCP_SECRET_KEY
         ncp_region = settings.NCP_REGION
-        ncp_endpoint_url = settings.NCP_ENDPOINT # NCP 엔드포인트 URL
+        ncp_endpoint_url = settings.NCP_ENDPOINT  # NCP 엔드포인트 URL
 
         self.bucket = settings.NCP_BUCKET_NAME
         self.client = boto3.client(
