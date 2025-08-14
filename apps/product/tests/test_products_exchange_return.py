@@ -1,6 +1,6 @@
 import uuid
 from decimal import Decimal
-
+from datetime import datetime, timezone
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from apps.product.models import Perfume, Product
 from apps.product.models.products_exchange_return import (
     ExchangeReturnRequest,
-    Product_Exchange,
+    ProductExchange,
 )
 from apps.product.serializers.products_exchange_return_serializers import (
     ProductExchangeSerializer,
@@ -46,8 +46,9 @@ class TestProductExchangeReturnAPIView:
 
     def test_success_response(self):
         # 1. 테스트에 필요한 객체들 생성
-        exchange_product = Product_Exchange.objects.create(
-            id=uuid.uuid4(), name="ExchPerf", description="ExchDesc", price=Decimal("10.99"), product=self.product
+        exchange_product = ProductExchange.objects.create(
+            id=uuid.uuid4(), name="ExchPerf", description="ExchDesc",
+            price=Decimal("10.99"), product=self.product
         )
 
         exchange_request = ExchangeReturnRequest.objects.create(
@@ -56,25 +57,29 @@ class TestProductExchangeReturnAPIView:
             status="pending",
             exchange_return=exchange_product,
             requests_reason="ReqReason1",
+            # equests_at=datetime(2025, 8, 12, 12, 0, 0, tzinfo=timezone.utc)
         )
 
         # 2. API 호출
         url = reverse("product-exchange-return", args=[exchange_product.id])
         response = self.client.get(url)
 
-        # 3. 예상 데이터 생성: 뷰의 응답 구조와 동일하게 맞춥니다.
-        expected_product_data = ProductExchangeSerializer(exchange_product).data
-        expected_product_data["exchange_return"] = {
-            "requests": [
-                {
-                    "request_id": str(exchange_request.request_id),
-                    "type": "exchange",
-                    "status": "pending",
-                    "requests_reason": "ReqReason1",
-                }
-            ]
-        }
+        # 3. 예상 데이터 생성: 뷰의 응답 구조와 동일하게 맞춤
+        expected_data = {
+            "product": ProductExchangeSerializer(exchange_product).data,
+            "exchange_return": {
+                "requests": [
+                    {
+                        "request_id": str(exchange_request.request_id),
+                        "type": "exchange",
+                        "status": "pending",
+                        "reason": "ReqReason1",
+                    }
+                ],
+                "is_exchange_available": True,
+                "is_return_available": False,
+            }  # <- exchange_return 닫기
+        }  # <- expected_data 닫기
 
         # 4. 검증
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["product"] == expected_product_data

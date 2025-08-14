@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.product.models.products_exchange_return import (
     ExchangeReturnRequest,
-    Product_Exchange,
+    ProductExchange,
 )
 
 
@@ -10,7 +10,6 @@ class ExchangeReturnRequestSerializer(serializers.ModelSerializer):
     request_id = serializers.UUIDField()
     type = serializers.CharField()
     status = serializers.CharField()
-    requested_at = serializers.DateTimeField()
     reason = serializers.CharField(source="requests_reason", allow_blank=True, required=False)
 
     class Meta:
@@ -20,7 +19,6 @@ class ExchangeReturnRequestSerializer(serializers.ModelSerializer):
             # "order_id", # 모델에 없는 필드이므로 제거
             "type",
             "status",
-            "requested_at",
             "reason",
         ]
 
@@ -29,7 +27,7 @@ class ProductExchangeSerializer(serializers.ModelSerializer):
     image_url = serializers.CharField(source="product_img_url", allow_blank=True, required=False)
 
     class Meta:
-        model = Product_Exchange
+        model =  ProductExchange
         fields = [
             "id",
             "name",
@@ -44,16 +42,20 @@ class ProductExchangeReturnResponseSerializer(serializers.Serializer):
     exchange_return = serializers.SerializerMethodField()
 
     def get_exchange_return(self, obj):
-        exchange_requests = obj.get("exchange_requests")
+        exchange_requests = obj.get("exchange_requests", [])
+        product = obj.get("product")  # ProductExchange 객체 가져오기
+
         if not exchange_requests:
             return {
                 "requests": [],
-                "is_exchange_available": True,
-                "is_return_available": False,
+                "is_exchange_available": getattr(product, "is_exchange_available", True),
+                "is_return_available": getattr(product, "is_return_available", False),
             }
+
         requests_data = ExchangeReturnRequestSerializer(exchange_requests, many=True).data
+
         return {
             "requests": requests_data,
-            "is_exchange_available": exchange_requests[0].is_exchange_available,
-            "is_return_available": exchange_requests[0].is_return_available,
+            "is_exchange_available": getattr(product, "is_exchange_available", True),
+            "is_return_available": getattr(product, "is_return_available", False),
         }
