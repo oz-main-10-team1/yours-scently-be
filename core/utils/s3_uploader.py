@@ -53,7 +53,7 @@ class S3Uploader:
         """S3/NCP URL에서 파일 삭제"""
         try:
             # URL에서 S3 키 추출 (NCP URL 형식에 맞게 수정)
-            base_url = f"{settings.NCP_ENDPOINT_URL}/{self.bucket}/"
+            base_url = f"{settings.NCP_ENDPOINT}/{self.bucket}/"
             if not s3_url.startswith(base_url):
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S KST")
                 logger.warning(f"예상치 못한 S3 URL 형식: {s3_url} - {timestamp}")
@@ -71,7 +71,7 @@ class S3Uploader:
     def update_file(self, file_obj: UploadedFile, s3_url: str) -> Optional[str]:
         try:
             # S3/NCP URL에서 Key 추출 (NCP URL 형식에 맞게 수정)
-            base_url = f"{settings.NCP_ENDPOINT_URL}/{self.bucket}/"
+            base_url = f"{settings.NCP_ENDPOINT}/{self.bucket}/"
             if not s3_url.startswith(base_url):
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S KST")
                 logger.warning(f"예상치 못한 S3 URL 형식: {s3_url} - {timestamp}")

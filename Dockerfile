@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set WORKDIR
 WORKDIR /yours_scently
 
 # install poetry
@@ -20,7 +19,6 @@ RUN poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock ./
 
 # install dependencies
-# We don't need to clean cache here as this is a builder stage
 RUN poetry install --no-interaction --no-root
 
 
@@ -35,9 +33,6 @@ WORKDIR /yours_scently
 
 RUN addgroup --system app && adduser --system --group app
 
-# gunicorn 설치 추가
-RUN pip install --no-cache-dir gunicorn
-
 # static / media 디렉토리 생성 및 권한 부여
 RUN mkdir -p /yours_scently/apps/static \
     && mkdir -p /yours_scently/apps/media \
@@ -45,10 +40,13 @@ RUN mkdir -p /yours_scently/apps/static \
     && chown -R app:app /yours_scently/apps \
     && chown -R app:app /yours_scently/staticfiles
 
+# Copy installed packages from builder stage
 COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
+
+# Copy project files
 COPY --chown=app:app ./ ./
 
 USER app
 
-# Set entrypoint or cmd
-# e.g., CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+# Default command
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
