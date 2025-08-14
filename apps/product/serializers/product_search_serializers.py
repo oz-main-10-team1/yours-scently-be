@@ -39,25 +39,45 @@ class ProductSearchItemSerializer(serializers.ModelSerializer):
         return str(obj.id)
 
     def get_brand(self, obj) -> str:
-        p = getattr(obj, "perfume", None)
-        if not p:
-            return ""
-        b = getattr(p, "brand", None)
-        return getattr(b, "name", str(b)) if b is not None else ""
+        perfume = getattr(obj, "perfume", None)
+        return getattr(perfume, "brand", "") if perfume else ""
 
     def get_notes(self, obj) -> List[str]:
         p = getattr(obj, "perfume", None)
         if not p:
             return []
-        # perfume에 notes 또는 main_accords 같은 M2M이 있을 때만 수집
-        for rel_name in ("notes", "main_accords"):
+
+        # 우선순위/합집합으로 수집
+        rel_names = ("notes", "main_accords", "top_notes", "middle_notes", "base_notes")
+        result: List[str] = []
+        seen = set()
+
+        for rel_name in rel_names:
             rel = getattr(p, rel_name, None)
-            if rel is not None:
+            if not rel:
+                continue
+
+            names: List[str] = []
+            try:
+                # M2M/RelatedManager인 경우 name 필드로 뽑기
+                names = list(rel.values_list("name", flat=True))
+            except Exception:
                 try:
-                    return list(rel.values_list("name", flat=True))
+                    # .all() 가능한 경우
+                    names = [str(n) for n in rel.all()]
                 except Exception:
-                    return [str(n) for n in rel.all()]
-        return []
+                    # 문자열/리스트 등 스칼라 처리
+                    if isinstance(rel, (list, tuple, set)):
+                        names = [str(x) for x in rel]
+                    else:
+                        names = [str(rel)]
+
+            for n in names:
+                if n and n not in seen:
+                    seen.add(n)
+                    result.append(n)
+
+        return result
 
     def get_thumbnail_url(self, obj) -> str:
         return str(getattr(obj, "product_img_url", "") or "")

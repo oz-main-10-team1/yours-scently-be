@@ -163,27 +163,30 @@ class ProductSearchAPI(APIView):
         # note: perfume 쪽 M2M(notes/main_accords)에 매칭(AND)
         if has_field(Product, "perfume"):
             perfume_model = Product._meta.get_field("perfume").remote_field.model
+            note_fields = ("notes", "main_accords", "top_notes", "middle_notes", "base_notes")
 
             for n in p.get("note", []) or []:
                 cond = Q()
-
-                # notes
-                if has_field(perfume_model, "notes"):
-                    if is_m2m_field(perfume_model, "notes") or is_relation_field(perfume_model, "notes"):
-                        # 관계형(FK/M2M) → 관련 모델의 name으로 검색
-                        cond |= Q(perfume__notes__name__iexact=n)
+                for field in note_fields:
+                    if not has_field(perfume_model, field):
+                        continue
+                    if is_m2m_field(perfume_model, field) or is_relation_field(perfume_model, field):
+                        # 관련 모델에 name이 있는지 확인
+                        rel_field = perfume_model._meta.get_field(field)
+                        rel_model = rel_field.remote_field.model
+                        if has_field(rel_model, "name"):
+                            cond |= Q(**{f"perfume__{field}__name__iexact": n})
+                        else:
+                            # name이 없으면 흔한 대체 필드(label/title/value)도 시도
+                            for alt in ("label", "title", "value"):
+                                if has_field(rel_model, alt):
+                                    cond |= Q(**{f"perfume__{field}__{alt}__iexact": n})
+                                    break
+                            # 대체 필드가 전혀 없으면 이 필드는 건너뜀
                     else:
-                        # 문자필드 → 필드 자체로 검색
-                        cond |= Q(perfume__notes__iexact=n)
-
-                # main_accords
-                if has_field(perfume_model, "main_accords"):
-                    if is_m2m_field(perfume_model, "main_accords") or is_relation_field(perfume_model, "main_accords"):
-                        cond |= Q(perfume__main_accords__name__iexact=n)
-                    else:
-                        cond |= Q(perfume__main_accords__iexact=n)
-
-                if cond:  # 둘 중 하나라도 존재할 때만 필터 적용
+                        # 문자 필드인 경우
+                        cond |= Q(**{f"perfume__{field}__iexact": n})
+                if cond:
                     qs = qs.filter(cond)
 
         # 가격
@@ -215,10 +218,10 @@ class ProductSearchAPI(APIView):
             qs = qs.select_related(*selects)
 
             prefetches = []
-            if is_m2m_field(perfume_model, "notes"):
-                prefetches.append("perfume__notes")
-            if is_m2m_field(perfume_model, "main_accords"):
-                prefetches.append("perfume__main_accords")
+            for f in ("notes", "main_accords", "top_notes", "middle_notes", "base_notes"):
+                if has_field(perfume_model, f) and is_m2m_field(perfume_model, f):
+                    prefetches.append(f"perfume__{f}")
+
             if prefetches:
                 qs = qs.prefetch_related(*prefetches)
         # 페이지네이션
