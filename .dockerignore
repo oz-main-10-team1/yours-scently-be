@@ -13,3 +13,13 @@ Dockerfile
 .coverage
 htmlcov/
 .root/.cache/pypoetry
+media/
+static/
+staticfiles/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+.poetry
+.cache

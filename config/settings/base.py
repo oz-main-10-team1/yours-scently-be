@@ -193,3 +193,9 @@ EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+NCP_ACCESS_KEY = os.getenv("NCP_ACCESS_KEY")
+NCP_SECRET_KEY = os.getenv("NCP_SECRET_KEY")
+NCP_BUCKET_NAME = os.getenv("NCP_BUCKET_NAME")
+NCP_ENDPOINT = os.getenv("NCP_ENDPOINT")
+NCP_REGION = os.getenv("NCP_REGION")
