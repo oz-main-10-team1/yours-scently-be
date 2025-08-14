@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
+import logging
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 from django.db.models import Q
+from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -12,6 +15,7 @@ from drf_spectacular.utils import (
 )
 from pgvector.django import CosineDistance
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from sentence_transformers import SentenceTransformer
@@ -23,10 +27,13 @@ from apps.recommendation.mapping import (
     MOOD_MAP,
     USAGE_MAP,
 )
+from apps.recommendation.models import Recommendation, RecommendationHistory
 from apps.recommendation.serializers.survey_recommendation_serializer import (
     PerfumeBriefSerializer,
     RecommendationRequestSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 _EMBED_MODEL: SentenceTransformer | None = None
 
@@ -39,18 +46,37 @@ def get_embed_model() -> SentenceTransformer:
 
 
 class PerfumeRecommendationView(APIView):
+    permission_classes = [IsAuthenticated]
+
     @extend_schema(
         tags=["Recommendation"],
         operation_id="recommend_one_perfume_from_survey",
         summary="설문 기반 향수 1개 추천",
         description=(
-            "설문 응답을 바탕으로 매핑 기반 필터링을 수행한 뒤, sentence-transformers 임베딩 코사인 유사도로 "
-            "최종 점수가 가장 높은 향수 1개를 반환합니다."
+            "설문 응답을 바탕으로 매핑 기반 필터링을 수행 "
+            "최종 점수가 가장 높은 향수 1개를 반환 로그인한 사용자의 경우 추천 이력이 자동으로 저장"
         ),
         request=RecommendationRequestSerializer,
         responses={
-            200: PerfumeBriefSerializer,
+            200: OpenApiResponse(
+                description="추천 성공",
+                examples=[
+                    OpenApiExample(
+                        name="성공 응답 예시",
+                        value={
+                            "id": 123,
+                            "name": "Light Breeze",
+                            "brand": "Acme",
+                            "intensity": "eau_de_toilette",
+                            "main_accords": ["fresh", "green"],
+                            "score": 0.8421,
+                            "history_id": 456,  # 이력 저장 성공시에만 포함
+                        },
+                    )
+                ],
+            ),
             400: OpenApiResponse(description="검증 오류 (필수 값 누락/형식 오류)"),
+            401: OpenApiResponse(description="인증 필요"),
             404: OpenApiResponse(description="조건에 맞는 후보가 없음"),
         },
         examples=[
@@ -64,25 +90,18 @@ class PerfumeRecommendationView(APIView):
                     "keyword": "사랑스러운",
                 },
             ),
-            OpenApiExample(
-                name="성공 응답 예시",
-                response_only=True,
-                value={
-                    "id": 123,
-                    "name": "Light Breeze",
-                    "brand": "Acme",
-                    "intensity": "eau_de_toilette",
-                    "main_accords": ["fresh", "green"],
-                    "score": 0.8421,
-                },
-            ),
         ],
     )
+
+    # 설문 기반 향수 추천 (이력 저장 기능 추가)
     def post(self, request, *args, **kwargs):
+
+        # 요청 데이터 검증
         req_ser = RecommendationRequestSerializer(data=request.data)
         if not req_ser.is_valid():
             return Response(req_ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        # 설문 데이터 추출
         mood = req_ser.validated_data["mood"]
         intensity = req_ser.validated_data["intensity"]
         usage = req_ser.validated_data["usage"]
@@ -100,7 +119,7 @@ class PerfumeRecommendationView(APIView):
         if intensities:
             base_q &= Q(intensity__in=intensities)
         if usage_code:
-            base_q &= Q(products__category=usage_code)  # Product의 FK 관계 사용
+            base_q &= Q(products__category=usage_code)
         if keyword_targets:
             base_q &= (
                 Q(top_notes__name__in=keyword_targets)
@@ -149,28 +168,21 @@ class PerfumeRecommendationView(APIView):
             .order_by("-similarity")  # 유사도 높은 순으로 정렬
         )
 
-        if not candidates_with_embedding.exists():
-            # 임베딩이 없는 경우 fallback
+        best_perfume = None
+        similarity_score = 0.5  # fallback 점수
+
+        if candidates_with_embedding.exists():
+            best_perfume = candidates_with_embedding.first()
+            similarity_score = best_perfume.similarity
+        else:
             if candidates.exists():
-                first_perfume = candidates.first()
-                item = {
-                    "id": first_perfume.id,
-                    "name": getattr(first_perfume, "name", None) or "",
-                    "brand": getattr(first_perfume, "brand", None) or "",
-                    "intensity": getattr(first_perfume, "intensity", None),
-                    "main_accords": list(first_perfume.main_accords.values_list("name", flat=True)),
-                    "score": 0.5,
-                }
-                resp_ser = PerfumeBriefSerializer(item)
-                return Response(resp_ser.data, status=status.HTTP_200_OK)
+                best_perfume = candidates.first()
+                similarity_score = 0.5
             else:
                 return Response(
                     {"message": "조건에 맞는 향수를 찾을 수 없습니다."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-
-        # 가장 유사한 향수 선택
-        best_perfume = candidates_with_embedding.first()
 
         item = {
             "id": best_perfume.id,
@@ -178,10 +190,23 @@ class PerfumeRecommendationView(APIView):
             "brand": getattr(best_perfume, "brand", None) or "",
             "intensity": getattr(best_perfume, "intensity", None),
             "main_accords": list(best_perfume.main_accords.values_list("name", flat=True)),
-            "score": float(round(best_perfume.similarity, 6)),
+            "score": float(round(similarity_score, 6)),
         }
 
-        assert item is not None
+        if request.user.is_authenticated:
+            try:
+                history = self._create_recommendation_history(
+                    user=request.user,
+                    survey_data={"mood": mood, "intensity": intensity, "usage": usage, "keyword": keyword},
+                    recommended_perfume=best_perfume,
+                    recommendation_score=similarity_score,
+                )
+                item["history_id"] = history.id
+
+            except Exception as e:
+                # 이력 저장 실패해도 추천 결과는 반환
+                logger.warning(f"추천 이력 저장 실패: {e}")
+
         resp_ser = PerfumeBriefSerializer(item)
         return Response(resp_ser.data, status=status.HTTP_200_OK)
 
@@ -220,3 +245,19 @@ class PerfumeRecommendationView(APIView):
         if an == 0.0 or bn == 0.0:
             return 0.0
         return float(np.dot(a, b) / (an * bn))
+
+    # 추천 이력 생성 헬퍼 함수
+    def _create_recommendation_history(self, user, survey_data, recommended_perfume, recommendation_score):
+        recommendation = Recommendation.objects.create(
+            user=user,
+            type=Recommendation.Type.SURVEY,
+            description="설문 기반 향수 추천",
+            reason="사용자 설문 응답을 바탕으로 한 개인화 추천",
+            context=json.dumps(survey_data, ensure_ascii=False),  # 설문 데이터를 JSON으로 저장
+        )
+
+        history = RecommendationHistory.objects.create(
+            recommendation=recommendation, perfume=recommended_perfume, similarity_score=float(recommendation_score)
+        )
+
+        return recommendation

@@ -7,6 +7,9 @@ from apps.recommendation.views.ai_recommendation_view import (
 from apps.recommendation.views.purpose_recommendation_view import (
     ProductBannerByCategoryView,
 )
+from apps.recommendation.views.recommendation_history_view import (
+    RecommendationHistoryDetailView,
+)
 from apps.recommendation.views.survey_recommendation_reason_view import (
     RecommendationReasonView,
 )
@@ -19,5 +22,6 @@ urlpatterns = [
     path("ai/", RecommendationCreateView.as_view(), name="ai-recommend"),
     path("survey/", PerfumeRecommendationView.as_view(), name="survey-recommendation"),
     path("histories/", RecommendationHistoryListView.as_view(), name="recommendation-history"),
+    path("history/<int:history_id>/", RecommendationHistoryDetailView.as_view(), name="recommendation-history-detail"),
     path("reason/", RecommendationReasonView.as_view(), name="recommendation-reason"),
 ]
