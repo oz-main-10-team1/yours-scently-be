@@ -1,6 +1,7 @@
 import uuid
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -47,8 +48,7 @@ class TestProductExchangeReturnAPIView:
     def test_success_response(self):
         # 1. 테스트에 필요한 객체들 생성
         exchange_product = ProductExchange.objects.create(
-            id=uuid.uuid4(), name="ExchPerf", description="ExchDesc",
-            price=Decimal("10.99"), product=self.product
+            id=uuid.uuid4(), name="ExchPerf", description="ExchDesc", price=Decimal("10.99"), product=self.product
         )
 
         exchange_request = ExchangeReturnRequest.objects.create(
@@ -78,7 +78,7 @@ class TestProductExchangeReturnAPIView:
                 ],
                 "is_exchange_available": True,
                 "is_return_available": False,
-            }  # <- exchange_return 닫기
+            },  # <- exchange_return 닫기
         }  # <- expected_data 닫기
 
         # 4. 검증

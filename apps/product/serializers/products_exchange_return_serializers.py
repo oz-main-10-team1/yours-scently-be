@@ -27,7 +27,7 @@ class ProductExchangeSerializer(serializers.ModelSerializer):
     image_url = serializers.CharField(source="product_img_url", allow_blank=True, required=False)
 
     class Meta:
-        model =  ProductExchange
+        model = ProductExchange
         fields = [
             "id",
             "name",
