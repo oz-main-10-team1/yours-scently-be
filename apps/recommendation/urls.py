@@ -22,7 +22,8 @@ urlpatterns = [
     path("banner/<str:category>/", ProductBannerByCategoryView.as_view(), name="product-banner-by-category"),
     path("ai/", RecommendationCreateView.as_view(), name="ai-recommend"),
     path("survey/", PerfumeRecommendationView.as_view(), name="survey-recommendation"),
-    path("histories/", SurveyRecommendationHistoryListView.as_view(), name="recommendation-history"),
-    path("history/<int:history_id>/", RecommendationHistoryDetailView.as_view(), name="recommendation-history-detail"),
+    path("histories/", RecommendationHistoryListView.as_view(), name="recommendation-history"),
     path("reason/", RecommendationReasonView.as_view(), name="recommendation-reason"),
+    path("survey-histories/", SurveyRecommendationHistoryListView.as_view(), name="survey-recommendation-history"),
+    path("history/<int:history_id>/", RecommendationHistoryDetailView.as_view(), name="recommendation-history-detail"),
 ]

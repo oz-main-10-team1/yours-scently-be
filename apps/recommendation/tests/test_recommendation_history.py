@@ -152,7 +152,7 @@ def multiple_recommendations(authenticated_user, sample_perfumes):
 def test_recommendation_history_list(api_client, authenticated_user, recommendation_history):
     api_client.force_authenticate(user=authenticated_user)
 
-    url = reverse("recommendation-history")
+    url = reverse("survey-recommendation-history")
     response = api_client.get(url)
 
     assert response.status_code == 200
@@ -184,7 +184,7 @@ def test_recommendation_history_list_multiple(api_client, authenticated_user, mu
     api_client.force_authenticate(user=authenticated_user)
     rec1, rec2 = multiple_recommendations
 
-    url = reverse("recommendation-history")
+    url = reverse("survey-recommendation-history")
     response = api_client.get(url)
 
     assert response.status_code == 200
@@ -264,7 +264,7 @@ def test_recommendation_history_detail_other_user(api_client, other_user, recomm
 def test_recommendation_history_empty_list(api_client, authenticated_user):
     api_client.force_authenticate(user=authenticated_user)
 
-    url = reverse("recommendation-history")
+    url = reverse("survey-recommendation-history")
     response = api_client.get(url)
 
     assert response.status_code == 200
@@ -278,7 +278,7 @@ def test_recommendation_history_empty_list(api_client, authenticated_user):
 @pytest.mark.django_db
 def test_recommendation_history_unauthenticated(api_client, recommendation_history):
     # 목록 조회
-    url = reverse("recommendation-history")
+    url = reverse("survey-recommendation-history")
     response = api_client.get(url)
     assert response.status_code == 401
 
@@ -350,7 +350,7 @@ def test_recommendation_history_performance(api_client, authenticated_user, samp
     with override_settings(DEBUG=True):
         connection.queries_log.clear()
 
-        url = reverse("recommendation-history")
+        url = reverse("survey-recommendation-history")
         response = api_client.get(url)
 
         # 쿼리 개수 확인 (N+1 문제가 해결되었다면 적은 수의 쿼리만 실행되어야 함)
