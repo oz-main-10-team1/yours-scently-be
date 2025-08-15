@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import pytest
@@ -7,6 +8,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.product.models import MainAccord, Note, Perfume, Product
+from apps.recommendation.models import Recommendation, RecommendationHistory
+from apps.recommendation.views.survey_recommendation_view import (
+    PerfumeRecommendationView,
+)
 
 User = get_user_model()
 
@@ -289,6 +294,131 @@ def test_perfume_recommendation_response_structure(api_client, perfume_test_data
     for field in required_fields:
         assert field in data, f"Missing field: {field}"
 
+    assert isinstance(data["id"], int)
+    assert isinstance(data["name"], str)
+    assert isinstance(data["brand"], str)
+    assert isinstance(data["intensity"], str)
+    assert isinstance(data["main_accords"], list)
+    assert isinstance(data["score"], float)
+    assert 0.0 <= data["score"] <= 1.0
+
+    valid_intensities = ["parfum", "eau_de_parfum", "eau_de_toilette", "eau_de_cologne", "eau_fraiche"]
+    assert data["intensity"] in valid_intensities
+
+
+# 이력 저장 기능 테스트
+@pytest.mark.django_db
+def test_perfume_recommendation_saves_history(api_client, perfume_test_data, authenticated_user):
+    api_client.force_authenticate(user=authenticated_user)
+
+    initial_count = Recommendation.objects.filter(user=authenticated_user).count()
+
+    url = reverse("survey-recommendation")
+    payload = {
+        "mood": "상쾌한 느낌",
+        "intensity": "적당한 향이 좋아요",
+        "usage": "데일리용",
+        "keyword": "사랑스러운",
+    }
+
+    response = api_client.post(url, payload, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    # 응답에 history_id가 포함되어야 함
+    assert "history_id" in data
+    assert isinstance(data["history_id"], int)
+
+    # 이력이 실제로 저장되었는지 확인
+    final_count = Recommendation.objects.filter(user=authenticated_user).count()
+    assert final_count == initial_count + 1
+
+    # 저장된 이력 내용 검증
+    recommendation = Recommendation.objects.get(id=data["history_id"])
+    assert recommendation.user == authenticated_user
+    assert recommendation.type == "survey"
+
+    # context에 설문 데이터가 JSON으로 저장되었는지 확인
+    context = json.loads(recommendation.context)
+    assert context["mood"] == "상쾌한 느낌"
+    assert context["intensity"] == "적당한 향이 좋아요"
+    assert context["usage"] == "데일리용"
+    assert context["keyword"] == "사랑스러운"
+
+    history = RecommendationHistory.objects.filter(recommendation=recommendation).first()
+    assert history is not None
+    assert history.perfume == perfume_test_data
+    assert history.similarity_score == data["score"]
+
+
+# 이력 저장 실패해도 추천 결과는 정상 반환되는지 확인
+@pytest.mark.django_db
+def test_perfume_recommendation_history_failure_still_returns_result(api_client, perfume_test_data, authenticated_user):
+    api_client.force_authenticate(user=authenticated_user)
+
+    url = reverse("survey-recommendation")
+    payload = {
+        "mood": "상쾌한 느낌",
+        "intensity": "적당한 향이 좋아요",
+        "usage": "데일리용",
+        "keyword": "사랑스러운",
+    }
+
+    response = api_client.post(url, payload, format="json")
+
+    # 추천 결과는 정상 반환되어야 함
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    assert data["name"] == perfume_test_data.name
+    assert data["brand"] == perfume_test_data.brand
+    assert "score" in data
+
+
+# 비인증 사용자는 이력이 저장되지 않음을 확인
+@pytest.mark.django_db
+def test_unauthenticated_user_no_history_saved(api_client, perfume_test_data):
+    url = reverse("survey-recommendation")
+    payload = {
+        "mood": "상쾌한 느낌",
+        "intensity": "적당한 향이 좋아요",
+        "usage": "데일리용",
+        "keyword": "사랑스러운",
+    }
+
+    response = api_client.post(url, payload, format="json")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# 기존 테스트 중 응답 구조 검증 테스트 업데이트
+@pytest.mark.django_db
+def test_perfume_recommendation_response_structure_with_history(api_client, perfume_test_data, authenticated_user):
+    api_client.force_authenticate(user=authenticated_user)
+
+    url = reverse("survey-recommendation")
+    payload = {
+        "mood": "상쾌한 느낌",
+        "intensity": "적당한 향이 좋아요",
+        "usage": "데일리용",
+        "keyword": "사랑스러운",
+    }
+
+    response = api_client.post(url, payload, format="json")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+
+    # 기존 필수 필드들
+    required_fields = ["id", "name", "brand", "intensity", "main_accords", "score"]
+    for field in required_fields:
+        assert field in data, f"Missing field: {field}"
+
+    # 새로 추가된 필드
+    assert "history_id" in data
+    assert isinstance(data["history_id"], int)
+
+    # 기존 검증 로직들
     assert isinstance(data["id"], int)
     assert isinstance(data["name"], str)
     assert isinstance(data["brand"], str)

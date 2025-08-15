@@ -44,3 +44,4 @@ class PerfumeBriefSerializer(serializers.Serializer):
     intensity = serializers.ChoiceField(choices=Perfume.IntensityChoices.choices, allow_null=True, required=False)
     main_accords = serializers.ListField(child=serializers.CharField(max_length=50), allow_empty=True)
     score = serializers.FloatField(min_value=0.0, max_value=1.0, help_text="임베딩 코사인 유사도 점수 (0.0 ~ 1.0)")
+    history_id = serializers.IntegerField(required=False)
