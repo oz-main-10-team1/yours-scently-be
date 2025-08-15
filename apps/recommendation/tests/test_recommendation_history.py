@@ -159,36 +159,23 @@ def test_recommendation_history_list(api_client, authenticated_user, recommendat
     data = response.json()
 
     assert "results" in data
+    assert "count" in data
     results = data["results"]
     assert len(results) == 1
-
+    assert data["count"] == 1
     history_item = results[0]
 
-    # 실제 응답 필드에 맞게 검증 수정
-    assert "id" in history_item
-    assert "type" in history_item
-    assert "created_at" in history_item
-    assert "histories" in history_item
+    required_fields = ["history_id", "recommended_at", "recommendation_type", "perfume_count", "first_perfume"]
+    for field in required_fields:
+        assert field in history_item, f"Missing field: {field}"
 
-    # 기본 정보 검증
-    assert history_item["id"] == recommendation_history.id
-    assert history_item["type"] == "survey"
+    assert history_item["history_id"] == recommendation_history.id
+    assert history_item["perfume_count"] == 2
+    assert history_item["recommendation_type"] == "survey"
 
-    # 추천된 향수들 검증 (histories 필드)
-    histories = history_item["histories"]
-    assert len(histories) == 2  # 우리가 생성한 향수 2개
-
-    # 첫 번째 향수 정보 검증
-    first_history = histories[0]
-    assert "perfume" in first_history
-    perfume = first_history["perfume"]
-    assert "name" in perfume
-    assert "brand" in perfume
-
-    # 향수 이름 확인
-    perfume_names = [h["perfume"]["name"] for h in histories]
-    assert "Romantic Musk" in perfume_names
-    assert "Blush Bloom" in perfume_names
+    first_perfume = history_item["first_perfume"]
+    assert first_perfume["perfume_name"] in ["Romantic Musk", "Blush Bloom"]
+    assert first_perfume["brand"] in ["Fragrance House", "Elegant Scent"]
 
 
 # 여러 추천 이력 목록 조회 테스트
@@ -206,16 +193,13 @@ def test_recommendation_history_list_multiple(api_client, authenticated_user, mu
     assert "results" in data
     results = data["results"]
     assert len(results) == 2
-
-    # 실제 필드에 맞게 검증
-    result_ids = [item["id"] for item in results]
-    assert rec1.id in result_ids
-    assert rec2.id in result_ids
+    assert data["count"] == 2
+    assert results[0]["history_id"] == rec2.id
+    assert results[1]["history_id"] == rec1.id
 
     # 타입 검증
-    result_types = [item["type"] for item in results]
-    assert "survey" in result_types
-    assert "ai" in result_types
+    assert results[0]["recommendation_type"] == "ai"
+    assert results[1]["recommendation_type"] == "survey"
 
 
 # 추천 이력 상세 조회 테스트
@@ -231,7 +215,7 @@ def test_recommendation_history_detail(api_client, authenticated_user, recommend
 
     required_fields = ["history_id", "recommended_at", "recommendation_type", "condition", "recommended_perfumes"]
     for field in required_fields:
-        assert field in data, f"Missing field: {field}. Available fields: {list(data.keys())}"
+        assert field in data, f"Missing field: {field}"
 
     assert data["history_id"] == recommendation_history.id
     assert data["recommendation_type"] == "survey"
@@ -287,6 +271,7 @@ def test_recommendation_history_empty_list(api_client, authenticated_user):
     data = response.json()
     assert "results" in data
     assert len(data["results"]) == 0
+    assert data["count"] == 0
 
 
 # 인증되지 않은 사용자의 접근 시 401 - 인증하지 않은 상태로 요청
@@ -332,3 +317,50 @@ def test_recommendation_context_parsing_fallback(api_client, authenticated_user,
     # fallback 조건 검증 (JSON 파싱 실패시 기본값)
     condition = data["condition"]
     assert condition == {"mood": "", "intensity": "", "usage": "", "keyword": ""}
+
+
+# N+1 쿼리 문제가 해결되었는지 성능 테스트
+@pytest.mark.django_db
+def test_recommendation_history_performance(api_client, authenticated_user, sample_perfumes):
+    perfume1, perfume2 = sample_perfumes
+
+    # 여러 추천 생성 (성능 테스트용)
+    for i in range(5):
+        recommendation = Recommendation.objects.create(
+            user=authenticated_user,
+            type=Recommendation.Type.SURVEY,
+            description=f"테스트 추천 {i+1}",
+            context=json.dumps({"test": f"data_{i}"}),
+        )
+
+        # 각 추천마다 2개씩 향수 추가
+        RecommendationHistory.objects.create(
+            recommendation=recommendation, perfume=perfume1, similarity_score=0.8 + i * 0.01
+        )
+        RecommendationHistory.objects.create(
+            recommendation=recommendation, perfume=perfume2, similarity_score=0.7 + i * 0.01
+        )
+
+    api_client.force_authenticate(user=authenticated_user)
+
+    # 쿼리 개수 측정
+    from django.db import connection
+    from django.test.utils import override_settings
+
+    with override_settings(DEBUG=True):
+        connection.queries_log.clear()
+
+        url = reverse("recommendation-history")
+        response = api_client.get(url)
+
+        # 쿼리 개수 확인 (N+1 문제가 해결되었다면 적은 수의 쿼리만 실행되어야 함)
+        query_count = len(connection.queries)
+        print(f"실행된 쿼리 개수: {query_count}")
+
+        assert query_count <= 5, f"너무 많은 쿼리 실행됨: {query_count}개"
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "results" in data
+    assert data["count"] == 5
+    assert len(data["results"]) == 5

@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 
 from apps.product.models import Perfume
@@ -24,18 +26,15 @@ class RecommendationHistoryListSerializer(serializers.ModelSerializer):
     history_id = serializers.IntegerField(source="id")
     recommended_at = serializers.DateTimeField(source="created_at")
     recommendation_type = serializers.CharField(source="type")
-    perfume_count = serializers.SerializerMethodField()
+    perfume_count = serializers.IntegerField()
     first_perfume = serializers.SerializerMethodField()
 
     class Meta:
         model = Recommendation
         fields = ["history_id", "recommended_at", "recommendation_type", "perfume_count", "first_perfume"]
 
-    def get_perfume_count(self, obj):
-        return obj.histories.count()
-
     def get_first_perfume(self, obj):
-        first_history = obj.histories.select_related("perfume").first()
+        first_history = obj.histories.all()[0] if obj.histories.all() else None
         if first_history:
             return RecommendedPerfumeBriefSerializer(first_history).data
         return None
@@ -56,7 +55,6 @@ class RecommendationHistoryDetailSerializer(serializers.ModelSerializer):
     # context 필드에 JSON 형태로 저장된 설문 데이터 파싱
     def get_condition(self, obj):
         try:
-            import json
 
             if obj.context:
                 return json.loads(obj.context)

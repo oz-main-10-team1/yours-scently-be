@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import pytest
@@ -5,13 +6,12 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-import json
 
 from apps.product.models import MainAccord, Note, Perfume, Product
+from apps.recommendation.models import Recommendation, RecommendationHistory
 from apps.recommendation.views.survey_recommendation_view import (
     PerfumeRecommendationView,
 )
-from apps.recommendation.models import Recommendation, RecommendationHistory
 
 User = get_user_model()
 
@@ -305,6 +305,7 @@ def test_perfume_recommendation_response_structure(api_client, perfume_test_data
     valid_intensities = ["parfum", "eau_de_parfum", "eau_de_toilette", "eau_de_cologne", "eau_fraiche"]
     assert data["intensity"] in valid_intensities
 
+
 # 이력 저장 기능 테스트
 @pytest.mark.django_db
 def test_perfume_recommendation_saves_history(api_client, perfume_test_data, authenticated_user):
@@ -351,7 +352,7 @@ def test_perfume_recommendation_saves_history(api_client, perfume_test_data, aut
     assert history.similarity_score == data["score"]
 
 
-#이력 저장 실패해도 추천 결과는 정상 반환되는지 확인
+# 이력 저장 실패해도 추천 결과는 정상 반환되는지 확인
 @pytest.mark.django_db
 def test_perfume_recommendation_history_failure_still_returns_result(
     api_client, perfume_test_data, authenticated_user, mocker
@@ -389,7 +390,7 @@ def test_perfume_recommendation_history_failure_still_returns_result(
     mock_create_history.assert_called_once()
 
 
-#비인증 사용자는 이력이 저장되지 않음을 확인
+# 비인증 사용자는 이력이 저장되지 않음을 확인
 @pytest.mark.django_db
 def test_unauthenticated_user_no_history_saved(api_client, perfume_test_data):
     url = reverse("survey-recommendation")

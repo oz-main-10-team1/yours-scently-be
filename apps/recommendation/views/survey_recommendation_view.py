@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from decimal import Decimal
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
@@ -257,7 +258,9 @@ class PerfumeRecommendationView(APIView):
         )
 
         history = RecommendationHistory.objects.create(
-            recommendation=recommendation, perfume=recommended_perfume, similarity_score=float(recommendation_score)
+            recommendation=recommendation,
+            perfume=recommended_perfume,
+            similarity_score=Decimal(str(recommendation_score)),
         )
 
         return recommendation

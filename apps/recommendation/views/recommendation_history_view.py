@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -10,6 +12,7 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,9 +25,16 @@ from apps.recommendation.serializers.recommendation_history_serializer import (
 )
 
 
+class RecommendationHistoryPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
 # 설문 추천 이력 목록 조회
-class RecommendationHistoryListView(APIView):
+class SurveyRecommendationHistoryListView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = RecommendationHistoryPagination
 
     @extend_schema(
         tags=["Recommendation History"],
@@ -32,8 +42,10 @@ class RecommendationHistoryListView(APIView):
         summary="설문 추천 이력 목록 조회",
         description="사용자의 설문 추천 이력 목록을 최신순으로 조회합니다.",
         parameters=[
-            OpenApiParameter(name="limit", description="조회할 개수 (기본값: 10)", required=False, type=int),
-            OpenApiParameter(name="offset", description="시작 위치 (기본값: 0)", required=False, type=int),
+            OpenApiParameter(name="page", description="페이지 번호", required=False, type=int),
+            OpenApiParameter(
+                name="page_size", description="페이지당 항목 수 (기본: 10, 최대: 50)", required=False, type=int
+            ),
         ],
         responses={
             200: RecommendationHistoryListSerializer(many=True),
@@ -67,8 +79,16 @@ class RecommendationHistoryListView(APIView):
         recommendations = (
             Recommendation.objects.filter(user=request.user)
             .prefetch_related("histories__perfume")
-            .order_by("-created_at")[offset : offset + limit]
+            .annotate(perfume_count=Count("histories"))
+            .order_by("-created_at")
         )
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(recommendations, request)
+
+        if page is not None:
+            serializer = RecommendationHistoryListSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = RecommendationHistoryListSerializer(recommendations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -124,10 +144,7 @@ class RecommendationHistoryDetailView(APIView):
     # 본인의 이력만 조회 가능
     def get(self, request, history_id):
         recommendation = get_object_or_404(
-            Recommendation.objects.filter(user=request.user).prefetch_related(
-                "histories__perfume", "histories__perfume__main_accords"
-            ),
-            id=history_id,
+            Recommendation.objects.prefetch_related("histories__perfume"), id=history_id, user=request.user
         )
 
         serializer = RecommendationHistoryDetailSerializer(recommendation)
@@ -140,11 +157,14 @@ def create_recommendation_history(user, survey_data, recommended_perfumes, recom
 
     recommendation = Recommendation.objects.create(
         user=user,
-        survey_conditions=conditions if hasattr(Recommendation, "survey_conditions") else None,
+        type=Recommendation.Type.SURVEY,
+        description="설문 기반 향수 추천",
+        reason="사용자 설문 응답을 바탕으로 한 개인화 추천",
+        context=json.dumps(survey_data, ensure_ascii=False),
     )
 
     for idx, perfume in enumerate(recommended_perfumes):
-        score = recommendation_scores[idx] if recommendation_scores else None
+        score = recommendation_scores[idx] if recommendation_scores and idx < len(recommendation_scores) else None
         decimal_score = Decimal(str(score)) if score is not None else None
 
         RecommendationHistory.objects.create(
