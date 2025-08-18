@@ -24,4 +24,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://yours-scently-fe.vercel.app",
     "https://www.yours-scently.store",
     "https://yours-scently.store",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
