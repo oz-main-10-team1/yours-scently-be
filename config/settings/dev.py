@@ -17,3 +17,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://yours-scently-fe.vercel.app",
+    "https://www.yours-scently.store",
+    "https://yours-scently.store",
+]

@@ -38,6 +38,7 @@ DJANGO_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -45,7 +46,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-THIRD_PARTY_APPS = ["rest_framework", "drf_spectacular", "django_filters"]
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "drf_spectacular",
+    "django_filters",
+    "corsheaders",
+]
 
 CUSTOM_APPS: list[str] = ["apps.users", "apps.product", "apps.recommendation", "apps.commerce", "apps.review"]
 
