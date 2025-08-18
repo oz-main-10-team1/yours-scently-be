@@ -1,5 +1,6 @@
 from rest_framework import generics, pagination
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.product.models import Product
@@ -26,6 +27,7 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.select_related("perfume").all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()
