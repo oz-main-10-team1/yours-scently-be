@@ -46,7 +46,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-THIRD_PARTY_APPS = ["rest_framework", "drf_spectacular", "django_filters", "corsheaders",]
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "drf_spectacular",
+    "django_filters",
+    "corsheaders",
+]
 
 CUSTOM_APPS: list[str] = ["apps.users", "apps.product", "apps.recommendation", "apps.commerce", "apps.review"]
 
