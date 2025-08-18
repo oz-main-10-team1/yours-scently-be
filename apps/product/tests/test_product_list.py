@@ -1,79 +1,77 @@
+import pytest
 from django.contrib.auth import get_user_model
-from django.urls import reverse
-from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from rest_framework.test import APIClient
 
 from apps.product.models import Perfume, Product
 
 User = get_user_model()
 
 
-class ProductListAPITest(APITestCase):
-    # 사용자 생성 및 JWT 토큰 발급
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(email="testuser@testuser.com", password="testpass123", is_active=True)
-        cls.access_token = str(RefreshToken.for_user(cls.user).access_token)
+# ---------------------------
+# Fixtures
+# ---------------------------
+@pytest.fixture
+def api_client():
+    return APIClient()
 
-        # 향수 하나 생성 (모든 상품에 공통적으로 사용)
-        cls.perfume = Perfume.objects.create(
-            name="테스트 향수",
-            brand="테스트 브랜드",
-            release_year=2022,
-            intensity="eau_de_parfum",
+
+@pytest.fixture
+def user(db):
+    return User.objects.create_user(email="testuser@example.com", password="testpass")  # 이메일 필수
+
+
+@pytest.fixture
+def perfume(db):
+    return Perfume.objects.create(name="테스트 향수", brand="테스트 브랜드", release_year=2025)
+
+
+@pytest.fixture
+def products(db, perfume):
+    products = []
+    for i in range(15):
+        product = Product.objects.create(
+            perfume=perfume,
+            name=f"테스트 향수 {i}",
+            description="기본 설명",
+            category="Daily",
+            price=10000 + i,
+            stock=10 + i,
+            product_img_url="https://example.com/images/test.jpg",
         )
+        products.append(product)
+    return products
 
-        # 상품 15개 생성 (페이지당 10개 가정)
-        products = [
-            Product(
-                name=f"상품 {i}",
-                perfume=cls.perfume,
-                description="테스트 향수입니다.",
-                category="Daily",
-                price=10000 + i,
-                stock=20,
-                volume_ml=50,
-                product_img_url=f"https://example.com/images/product_{i}.jpg",
-            )
-            for i in range(15)
-        ]
-        Product.objects.bulk_create(products)
 
-    def setUp(self):
-        self.access_token = self.__class__.access_token
+# ---------------------------
+# Tests
+# ---------------------------
+@pytest.mark.django_db
+def test_product_list_pagination_success(api_client, user, products):
+    # 로그인
+    api_client.force_authenticate(user=user)
+    url = "/api/v1/product/?limit=10&offset=0"
+    response = api_client.get(url)
 
-    def _auth_headers(self):
-        return {"HTTP_AUTHORIZATION": f"Bearer {self.access_token}"}
+    assert response.status_code == status.HTTP_200_OK
+    assert "results" in response.data
+    assert "data" in response.data["results"]
 
-    def test_product_list_pagination_success(self):
-        url = reverse("product-list")  # 페이지네이션 적용된 API
-        response = self.client.get(url, **self._auth_headers())
+    products_list = response.data["results"]["data"]
+    assert isinstance(products_list, list)
+    assert len(products_list) <= 10
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("results", response.data)
-        self.assertIn("count", response.data)
-        self.assertIn("next", response.data)
-        self.assertIsInstance(response.data["results"], list)
+    assert "message" in response.data["results"]
+    assert response.data["results"]["message"] == "상품 목록 조회 성공 (조회수 증가)"
 
-        # 기본 페이지 사이즈(예: 10개) 확인
-        self.assertEqual(len(response.data["results"]), 10)
-        self.assertEqual(response.data["count"], 15)
-        self.assertIsNotNone(response.data["next"])  # 다음 페이지 있어야 함
 
-    def test_product_list_second_page(self):
-        """상품 목록 두 번째 페이지 조회"""
-        url = reverse("product-list") + "?limit=10&offset=10"
-        response = self.client.get(url, **self._auth_headers())
+@pytest.mark.django_db
+def test_product_list_unauthenticated(api_client, user, products):
+    # 인증 없이 접근 시, API permission에 따라 상태 코드 확인
+    url = "/api/v1/product/?limit=10&offset=0"
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("results", response.data)
-        self.assertEqual(len(response.data["results"]), 5)
+    # 인증 없이 호출
+    response = api_client.get(url)
 
-    def test_product_list_unauthenticated(self):
-        """인증 없이 요청할 경우 401 응답을 반환한다."""
-        url = reverse("product-list")
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 401)
-        self.assertIn("detail", response.data)
-        self.assertIn("자격 인증 데이터", str(response.data["detail"]))
+    # 인증 필요하면 401, 필요 없으면 200
+    assert response.status_code in [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED]

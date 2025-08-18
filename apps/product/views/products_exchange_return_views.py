@@ -14,17 +14,7 @@ from apps.product.serializers.products_exchange_return_serializers import (
 
 
 class ProductExchangeReturnAPIView(APIView):
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="product_exchange_id",
-                type=OpenApiTypes.UUID,
-                location=OpenApiParameter.PATH,
-                description="Product exchange UUID",
-            )
-        ],
-        responses={200: ProductExchangeReturnResponseSerializer},
-    )
+
     def get(self, request, *args, **kwargs):
         product_exchange_id = kwargs.get("product_exchange_id")
         try:
