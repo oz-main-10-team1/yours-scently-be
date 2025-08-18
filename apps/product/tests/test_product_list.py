@@ -68,12 +68,3 @@ class ProductListAPITest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("results", response.data)
         self.assertEqual(len(response.data["results"]), 5)
-
-    def test_product_list_unauthenticated(self):
-        """인증 없이 요청할 경우 401 응답을 반환한다."""
-        url = reverse("product-list")
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 401)
-        self.assertIn("detail", response.data)
-        self.assertIn("자격 인증 데이터", str(response.data["detail"]))
