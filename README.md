@@ -52,7 +52,7 @@ Docker, Docker Compose 설치 필요
 
 ```
 git clone https://github.com/oz-main-10-team1/yours-scently-be.git
-cd yours_scently
+cd yours-scently-be
 ```
 
 ### 컨테이너 빌드 및 실행
@@ -79,9 +79,9 @@ swagger: http://localhost:8000/api/schema/swagger-ui/#/
 
 ### Code Convention
 > - 패키지명 전체 소문자
-> - 클래스명, 인터페이스명 CamelCase
+> - 클래스명, 인터페이스명 PascalCase
 > - 클래스 이름 명사 사용
-> - 상수명 SNAKE_CASE
+> - 상수명 UPPER_SNAKE_CASE
 
 ### Communication Rules
 > - Discord 활용 

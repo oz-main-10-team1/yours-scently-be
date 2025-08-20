@@ -18,6 +18,7 @@ services:
     volumes:
       - static_volume:/yours_scently/apps/static
       - media_volume:/yours_scently/apps/media
+      - ./:/yours_scently/
     networks:
       - ws
     depends_on:
