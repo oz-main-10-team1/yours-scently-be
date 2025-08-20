@@ -23,7 +23,7 @@ def call_clova_model(user_input: str) -> Dict:
         "출력 형식:\n"
         "{\n"
         '  "description": "사용자의 감성 및 분위기를 인용하여 향수를 직접 추천하는 문장",\n'
-        '  "keywords": ["머스크", "파우더리", "포근한"],\n'
+        '  "keywords": ["musk", "vanilla", "powdery"],\n'
         '  "reason": "추천 배경 요약 (예: 감정 상태, 계절, 향 노트 등). 전체 문장이 아닌 구절 형태로 끝내기 (예: 계절감 고려, 따뜻한 분위기 반영)"\n'
         "}\n\n"
         "설명:\n"
