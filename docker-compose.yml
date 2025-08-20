@@ -5,14 +5,14 @@ services:
       - envs/.local.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.local
+    image: yours_scently-django:latest
     build:
       context: .
     working_dir: /yours_scently
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             poetry run python manage.py runserver 0.0.0.0:8000
-             "
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:
@@ -26,6 +26,27 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  celery:
+    container_name: celery
+    image: yours-scently-be-django:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    env_file:
+      - envs/.local.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    working_dir: /yours_scently
+    command: >
+      bash -c "celery -A config worker -l info"
+    depends_on:
+      django:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - ws
 
   nginx:
     image: nginx:latest
@@ -43,7 +64,7 @@ services:
       - ws
 
   db:
-    image: postgres:14
+    image: pgvector/pgvector:0.8.0-pg14
     container_name: postgres
     environment:
       POSTGRES_USER: postgres

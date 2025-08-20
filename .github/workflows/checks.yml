@@ -1,6 +1,6 @@
 name: Code Quality Checks
 
-# develop, main 브랜치를 상대로 풀 리퀘스트가 생성될 때 CI가 실행됩니다.
+# develop, main 브랜치를 상대로 풀 리퀘스트가 생성될 때 postgres가 실행됩니다.
 on:
   pull_request:
     branches:
@@ -69,7 +69,7 @@ jobs:
     services:
       # postgresql db service
       db:
-        image: postgres:14
+        image: pgvector/pgvector:0.8.0-pg14
         ports:
           - 5432:5432
         env:
@@ -148,8 +148,7 @@ jobs:
           poetry run python manage.py migrate
 
       # run test
-      - name: Test python project
+      - name: Run tests with pytest
         if: steps.check-tests.outputs.has_tests == 'true'
         run: |
-          poetry run coverage run manage.py test
-          poetry run coverage report -m
+          poetry run pytest
