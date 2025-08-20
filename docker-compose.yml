@@ -12,14 +12,12 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             poetry run python manage.py runserver 0.0.0.0:8000
-             "
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:
       - static_volume:/yours_scently/apps/static
       - media_volume:/yours_scently/apps/media
-      - ./:/yours_scently/
     networks:
       - ws
     depends_on:
@@ -38,17 +36,14 @@ services:
       - envs/.local.env
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.local
-
     working_dir: /yours_scently
     command: >
-      bash -c "poetry run celery -A config worker -l info"
-
+      bash -c "celery -A config worker -l info"
     depends_on:
       django:
         condition: service_started
       redis:
         condition: service_healthy
-
     networks:
       - ws
 
